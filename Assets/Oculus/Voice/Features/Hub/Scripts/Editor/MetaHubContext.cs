@@ -32,6 +32,8 @@ namespace Meta.Voice.Hub
         [SerializeField] private ScriptableObjectReflectionPage[] _scriptableObjectPages;
         [SerializeField] private string _defaultPage;
 
+        [SerializeField] private string[] _parentContexts;
+
         public virtual string Name => name;
         public virtual int Priority => _priority;
         public virtual Texture2D LogoImage => _logo;
@@ -40,6 +42,7 @@ namespace Meta.Voice.Hub
         public virtual string Title => _windowTitle;
         public virtual bool ShowPageGroupTitle => showPageGroupTitle;
         public virtual bool AllowWithoutContextFilter => _allowWithoutContextFilter;
+        public virtual string[] ParentContexts => _parentContexts;
         
         public virtual ScriptableObjectReflectionPage[] ScriptableObjectReflectionPages => _scriptableObjectPages;
 

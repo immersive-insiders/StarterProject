@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(OVRVirtualKeyboardSampleInputHandler))]
@@ -31,16 +31,18 @@ public class OVRVirtualKeyboardSampleControls : MonoBehaviour
         private readonly Vector3 _position;
         private readonly Quaternion _rotation;
         private readonly Vector3 _scale;
-        private readonly Transform _rightControllerInputTransform;
-        private readonly Transform _leftControllerInputTransform;
+        private readonly Transform _rightControllerDirectTransform;
+        private readonly Transform _rightControllerRootTransform;
+        private readonly Transform _leftControllerDirectTransform;
+        private readonly Transform _leftControllerRootTransform;
         private readonly bool _controllerRayInteraction;
         private readonly bool _controllerDirectInteraction;
-        private readonly LayerMask _controllerRaycastLayerMask;
         private readonly OVRHand _handLeft;
         private readonly OVRHand _handRight;
         private readonly bool _handRayInteraction;
         private readonly bool _handDirectInteraction;
-        private readonly LayerMask _handRaycastLayerMask;
+        private readonly OVRPhysicsRaycaster _controllerRaycaster;
+        private readonly OVRPhysicsRaycaster _handRaycaster;
 
         public OVRVirtualKeyboardBackup(OVRVirtualKeyboard keyboard)
         {
@@ -49,17 +51,19 @@ public class OVRVirtualKeyboardSampleControls : MonoBehaviour
             _rotation = keyboard.transform.rotation;
             _scale = keyboard.transform.localScale;
 
-            _rightControllerInputTransform = keyboard.rightControllerInputTransform;
-            _leftControllerInputTransform = keyboard.leftControllerInputTransform;
+            _rightControllerDirectTransform = keyboard.rightControllerDirectTransform;
+            _rightControllerRootTransform = keyboard.rightControllerRootTransform;
+            _leftControllerDirectTransform = keyboard.leftControllerDirectTransform;
+            _leftControllerRootTransform = keyboard.leftControllerRootTransform;
             _controllerRayInteraction = keyboard.controllerRayInteraction;
             _controllerDirectInteraction = keyboard.controllerDirectInteraction;
-            _controllerRaycastLayerMask = keyboard.handRaycastLayerMask;
+            _controllerRaycaster = keyboard.controllerRaycaster;
 
             _handLeft = keyboard.handLeft;
             _handRight = keyboard.handRight;
             _handRayInteraction = keyboard.handRayInteraction;
             _handDirectInteraction = keyboard.handDirectInteraction;
-            _handRaycastLayerMask = keyboard.handRaycastLayerMask;
+            _handRaycaster = keyboard.handRaycaster;
         }
 
         public void RestoreTo(OVRVirtualKeyboard keyboard)
@@ -68,17 +72,19 @@ public class OVRVirtualKeyboardSampleControls : MonoBehaviour
             keyboard.transform.SetPositionAndRotation(_position, _rotation);
             keyboard.transform.localScale = _scale;
 
-            keyboard.rightControllerInputTransform = _rightControllerInputTransform;
-            keyboard.leftControllerInputTransform = _leftControllerInputTransform;
+            keyboard.rightControllerDirectTransform = _rightControllerDirectTransform;
+            keyboard.rightControllerRootTransform = _rightControllerRootTransform;
+            keyboard.leftControllerDirectTransform = _leftControllerDirectTransform;
+            keyboard.leftControllerRootTransform = _leftControllerRootTransform;
             keyboard.controllerRayInteraction = _controllerRayInteraction;
             keyboard.controllerDirectInteraction = _controllerDirectInteraction;
-            keyboard.controllerRaycastLayerMask = _controllerRaycastLayerMask;
+            keyboard.controllerRaycaster = _controllerRaycaster;
 
             keyboard.handLeft = _handLeft;
             keyboard.handRight = _handRight;
             keyboard.handRayInteraction = _handRayInteraction;
             keyboard.handDirectInteraction = _handDirectInteraction;
-            keyboard.handRaycastLayerMask = _handRaycastLayerMask;
+            keyboard.handRaycaster = _handRaycaster;
         }
     }
 
@@ -167,7 +173,7 @@ public class OVRVirtualKeyboardSampleControls : MonoBehaviour
     public void MoveKeyboardNear()
     {
         if (!keyboard.gameObject.activeSelf) return;
-        keyboard.UseSuggestedLocation(OVRVirtualKeyboard.KeyboardPosition.Direct);
+        keyboard.UseSuggestedLocation(OVRVirtualKeyboard.KeyboardPosition.Near);
     }
 
     public void MoveKeyboardFar()

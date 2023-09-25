@@ -94,6 +94,12 @@ namespace Oculus.Interaction.GrabAPI
         private static extern ReturnValue isdk_FingerPinchGrabAPI_GetFingerIsGrabbing(int handle, int index, out bool grabbing);
 
         [DllImport("InteractionSdk")]
+        private static extern ReturnValue isdk_FingerPinchGrabAPI_GetFingerPinchPercent(int handle, int index, out float pinchPercent);
+
+        [DllImport("InteractionSdk")]
+        private static extern ReturnValue isdk_FingerPinchGrabAPI_GetFingerPinchDistance(int handle, int index, out float pinchDistance);
+
+        [DllImport("InteractionSdk")]
         private static extern ReturnValue isdk_FingerPinchGrabAPI_GetFingerIsGrabbingChanged(int handle, int index, bool targetState, out bool grabbing);
 
         [DllImport("InteractionSdk")]
@@ -162,6 +168,20 @@ namespace Oculus.Interaction.GrabAPI
             ReturnValue rc = isdk_FingerPinchGrabAPI_GetFingerIsGrabbing(GetHandle(), (int)finger, out bool grabbing);
             Debug.Assert(rc != ReturnValue.Failure, "FingerPinchGrabAPI: isdk_FingerPinchGrabAPI_GetFingerIsGrabbing failed");
             return grabbing;
+        }
+
+        public float GetFingerPinchPercent(HandFinger finger)
+        {
+            ReturnValue rc = isdk_FingerPinchGrabAPI_GetFingerPinchPercent(GetHandle(), (int)finger, out float pinchPercent);
+            Debug.Assert(rc != ReturnValue.Failure, "FingerPinchGrabAPI: isdk_FingerPinchGrabAPI_GetFingerPinchPercent failed");
+            return pinchPercent;
+        }
+
+        public float GetFingerPinchDistance(HandFinger finger)
+        {
+            ReturnValue rc = isdk_FingerPinchGrabAPI_GetFingerPinchDistance(GetHandle(), (int)finger, out float pinchDistance);
+            Debug.Assert(rc != ReturnValue.Failure, "FingerPinchGrabAPI: isdk_FingerPinchGrabAPI_GetFingerPinchDistance failed");
+            return pinchDistance;
         }
 
         public Vector3 GetWristOffsetLocal()

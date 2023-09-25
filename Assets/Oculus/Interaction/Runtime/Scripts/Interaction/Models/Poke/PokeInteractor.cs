@@ -213,7 +213,7 @@ namespace Oculus.Interaction
         {
             if (_recoilInteractable != null)
             {
-                float depth = ComputeDepth(_recoilInteractable, Origin);
+                float depth = ComputePokeDepth(_recoilInteractable, Origin);
                 _reEnterDepth = Mathf.Min(depth + _recoilInteractable.RecoilAssist.ReEnterDistance, _reEnterDepth);
                 _hitInteractable = depth > _reEnterDepth ? _recoilInteractable : null;
             }
@@ -575,7 +575,7 @@ namespace Oculus.Interaction
             foreach (PokeInteractor pokeInteractor in interactable.Interactors)
             {
                 // Scalar project the poke interactor's position onto the button base's normal vector
-                float normalDistance = ComputeDepth(interactable, pokeInteractor.Origin);
+                float normalDistance = ComputePokeDepth(interactable, pokeInteractor.Origin);
                 minDepth = Mathf.Min(normalDistance, minDepth);
             }
 
@@ -749,35 +749,31 @@ namespace Oculus.Interaction
         // Returns 0 for where the sphere touches the surface along the normal.
         private float ComputeDistanceAbove(PokeInteractable interactable, Vector3 point)
         {
-            interactable.ClosestBackingSurfaceHit(point, out SurfaceHit hit);
-            Vector3 surfaceToPoint = point - hit.Point;
-            return Vector3.Dot(surfaceToPoint, hit.Normal) - _radius;
+            return SurfaceUtils.ComputeDistanceAbove(interactable.SurfacePatch, point, _radius);
         }
 
         // The distance below a surface along the closest normal. Always positive.
+        [System.Obsolete("This will be removed in a future version of Interaction SDK. Please use SurfaceUtils.ComputeDepth instead")]
         public float ComputeDepth(PokeInteractable interactable, Vector3 point)
         {
-            return Mathf.Max(0f, -ComputeDistanceAbove(interactable, point));
+            return SurfaceUtils.ComputeDepth(interactable.SurfacePatch, point, _radius);
+        }
+
+        private float ComputePokeDepth(PokeInteractable interactable, Vector3 point)
+        {
+            return SurfaceUtils.ComputeDepth(interactable.SurfacePatch, point, _radius);
         }
 
         // The distance from the closest point as computed by the proximity field and surface.
         // Returns the distance to the point without taking into account the surface normal.
         private float ComputeDistanceFrom(PokeInteractable interactable, Vector3 point)
         {
-            interactable.ClosestSurfacePatchHit(point, out SurfaceHit hit);
-            Vector3 surfaceToPoint = point - hit.Point;
-            return surfaceToPoint.magnitude - _radius;
+            return SurfaceUtils.ComputeDistanceFrom(interactable.SurfacePatch, point, _radius);
         }
 
         private float ComputeTangentDistance(PokeInteractable interactable, Vector3 point)
         {
-            interactable.ClosestSurfacePatchHit(point, out SurfaceHit patchHit);
-            interactable.ClosestBackingSurfaceHit(point, out SurfaceHit backingHit);
-            Vector3 proximityToPoint = point - patchHit.Point;
-            Vector3 projOnNormal = Vector3.Dot(proximityToPoint, backingHit.Normal) *
-                backingHit.Normal;
-            Vector3 lateralVec = proximityToPoint - projOnNormal;
-            return lateralVec.magnitude - _radius;
+            return SurfaceUtils.ComputeTangentDistance(interactable.SurfacePatch, point, _radius);
         }
 
         // Returns if poke origin is still considered to be within the surface.
@@ -809,8 +805,8 @@ namespace Oculus.Interaction
 
             if (interactable.DragThresholds.Enabled)
             {
-                float worldDepthDelta = Mathf.Abs(ComputeDepth(interactable, Origin) -
-                                              ComputeDepth(interactable, _previousPokeOrigin));
+                float worldDepthDelta = Mathf.Abs(ComputePokeDepth(interactable, Origin) -
+                                              ComputePokeDepth(interactable, _previousPokeOrigin));
                 Vector3 positionDeltaLocal = positionOnSurfaceLocal - _previousSurfacePointLocal;
                 Vector3 positionDeltaWorld =
                     interactable.SurfacePatch.BackingSurface.Transform.TransformVector(positionDeltaLocal);
@@ -924,7 +920,7 @@ namespace Oculus.Interaction
         protected virtual bool ShouldCancel(PokeInteractable interactable)
         {
             if ((interactable.CancelSelectNormal > 0.0f &&
-                ComputeDepth(interactable, Origin) >
+                ComputePokeDepth(interactable, Origin) >
                 interactable.CancelSelectNormal) ||
                 (interactable.CancelSelectTangent > 0.0f &&
                 ComputeTangentDistance(interactable, Origin) >
@@ -943,7 +939,7 @@ namespace Oculus.Interaction
                 return false;
             }
 
-            float depth = ComputeDepth(interactable, Origin);
+            float depth = ComputePokeDepth(interactable, Origin);
             float deltaTime = _timeProvider() - _lastUpdateTime;
             float recoilExitDistance = interactable.RecoilAssist.ExitDistance;
 

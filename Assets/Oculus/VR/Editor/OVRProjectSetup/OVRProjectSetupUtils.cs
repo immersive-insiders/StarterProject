@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEditor;
@@ -29,35 +29,42 @@ using UnityEngine.SceneManagement;
 
 internal static class OVRProjectSetupUtils
 {
-    private static string _rootPath;
-
-    public static string RootPath
-    {
-        get
-        {
-            if (_rootPath == null)
-            {
-                var g = AssetDatabase.FindAssets($"t:Script {nameof(OVRProjectSetupUtils)}");
-                _rootPath = AssetDatabase.GUIDToAssetPath(g[0]);
-                _rootPath = Path.GetDirectoryName(_rootPath);
-            }
-
-            return _rootPath;
-        }
-    }
-
-    private const string IconsRelativePath = "Icons/";
-
-    public static string BuildIconPath(string path)
-    {
-        return Path.Combine(Path.Combine(RootPath, IconsRelativePath), path);
-    }
-
     public static T FindComponentInScene<T>() where T : Component
     {
         var scene = SceneManager.GetActiveScene();
         var rootGameObjects = scene.GetRootGameObjects();
         return rootGameObjects.FirstOrDefault(go => go.GetComponentInChildren<T>())?.GetComponentInChildren<T>();
+    }
+
+    public static List<T> FindComponentsInScene<T>() where T : Component
+    {
+        var activeScene = SceneManager.GetActiveScene();
+        var foundComponents = new List<T>();
+
+        var rootObjects = activeScene.GetRootGameObjects();
+        foreach (var rootObject in rootObjects)
+        {
+            var components = rootObject.GetComponentsInChildren<T>(true);
+            foundComponents.AddRange(components);
+        }
+
+        return foundComponents;
+    }
+
+    public static bool HasComponentInParents<T>(GameObject obj) where T : Component
+    {
+        var currentTransform = obj.transform;
+
+        while (currentTransform != null)
+        {
+            if (currentTransform.GetComponent<T>() != null)
+            {
+                return true;
+            }
+            currentTransform = currentTransform.parent;
+        }
+
+        return false;
     }
 
     public static T FindScriptableObjectInProject<T>() where T : ScriptableObject
@@ -73,32 +80,14 @@ internal static class OVRProjectSetupUtils
         return AssetDatabase.LoadAssetAtPath<T>(path);
     }
 
-    public static GUIContent CreateIcon(string name, string tooltip = null, bool builtIn = false)
-    {
-        GUIContent content = null;
-        if (builtIn)
-        {
-            content = EditorGUIUtility.TrIconContent(name, tooltip);
-        }
-        else
-        {
-            var path = BuildIconPath(name);
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            content = new GUIContent
-            {
-                image = texture,
-                tooltip = tooltip
-            };
-        }
 
-        return content;
-    }
 
     private static ListRequest _packageManagerListRequest;
 
     static OVRProjectSetupUtils()
     {
         RefreshPackageList(false);
+        OVRGUIContent.RegisterContentPath(OVRGUIContent.Source.ProjectSetupToolIcons, "OVRProjectSetup/Icons");
     }
 
     public static bool PackageManagerListAvailable => _packageManagerListRequest.Status == StatusCode.Success;

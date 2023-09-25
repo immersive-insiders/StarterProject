@@ -207,15 +207,19 @@ internal class OVRProjectSetupDrawer
     private static readonly GUIContent GenerateReportButtonContent =
         new GUIContent("Generate report", "Generate a report of all the issues");
 
-    private static readonly GUIContent WarningIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_warning.png");
-    private static readonly GUIContent ErrorIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_error.png");
-    private static readonly GUIContent InfoIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_neutral.png");
+    private static readonly OVRGUIContent WarningIcon = OVREditorUtils.CreateContent("ovr_icon_category_warning.png", OVRGUIContent.Source.ProjectSetupToolIcons);
+    private static readonly OVRGUIContent ErrorIcon = OVREditorUtils.CreateContent("ovr_icon_category_error.png", OVRGUIContent.Source.ProjectSetupToolIcons);
 
-    private static readonly GUIContent TestPassedIcon =
-        OVRProjectSetupUtils.CreateIcon("ovr_icon_category_success.png");
+    private static readonly OVRGUIContent InfoIcon = OVREditorUtils.CreateContent("ovr_icon_category_neutral.png", OVRGUIContent.Source.ProjectSetupToolIcons);
+    private static readonly OVRGUIContent TestPassedIcon =
+        OVREditorUtils.CreateContent("ovr_icon_category_success.png", OVRGUIContent.Source.ProjectSetupToolIcons);
 
-    private static readonly GUIContent ConfigIcon =
-        OVRProjectSetupUtils.CreateIcon("_Popup", "Additional options", builtIn: true);
+    private static readonly OVRGUIContent ConfigIcon =
+        OVREditorUtils.CreateContent("_Popup", OVRGUIContent.Source.BuiltIn, "Additional options");
+
+
+    private static readonly OVRGUIContent DocumentationIcon =
+        OVREditorUtils.CreateContent("ovr_icon_documentation.png",  OVRGUIContent.Source.GenericIcons, "Go to Documentation");
 
     private const string OutstandingItems = "Outstanding Issues";
     private const string RecommendedItems = "Recommended Items";
@@ -229,10 +233,6 @@ internal class OVRProjectSetupDrawer
     private const string TasksRefreshErrorMessage = "Could not refresh the checklist.";
     private const string TasksRefreshSuccessMessage = "Tasks refreshed successfully.";
     private const string OkButton = "ok";
-
-    private static readonly GUIContent DocumentationIcon =
-        OVRProjectSetupUtils.CreateIcon("ovr_icon_documentation.png", "Go to Documentation");
-
     private const string DocumentationUrl =
         "https://developer.oculus.com/documentation/unity/unity-upst-overview";
 
@@ -310,7 +310,7 @@ internal class OVRProjectSetupDrawer
         return newValue;
     }
 
-    private GUIContent GetTaskIcon(OVRConfigurationTask task, BuildTargetGroup buildTargetGroup)
+    private OVRGUIContent GetTaskIcon(OVRConfigurationTask task, BuildTargetGroup buildTargetGroup)
     {
         if (task.IsDone(buildTargetGroup))
         {

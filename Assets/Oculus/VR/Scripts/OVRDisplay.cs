@@ -191,8 +191,9 @@ public class OVRDisplay
     }
 
     /// <summary>
-    /// Gets the current linear acceleration of the head.
+    /// (Deprecated) Gets the current linear acceleration of the head.
     /// </summary>
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     public Vector3 acceleration
     {
         get
@@ -209,8 +210,9 @@ public class OVRDisplay
     }
 
     /// <summary>
-    /// Gets the current angular acceleration of the head in radians per second per second about each axis.
+    /// (Deprecated) Gets the current angular acceleration of the head in radians per second per second about each axis.
     /// </summary>
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     public Vector3 angularAcceleration
     {
         get

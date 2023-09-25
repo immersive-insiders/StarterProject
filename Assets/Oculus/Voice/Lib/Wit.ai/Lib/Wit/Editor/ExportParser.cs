@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +28,16 @@ namespace Meta.WitAi.Lib
         private readonly List<PathValues> _sharedVariables = new List<PathValues>();
         private readonly List<PathValues> _serverVariables = new List<PathValues>();
         private readonly ArrayList _clientVariables = new ArrayList();
+        private readonly HashSet<string> _actions = new HashSet<string>();
+
         private const string ComposerFolderName = "/composer/";
+        private const string CharacterFolderName = "/characters/";
+        private const string ResponseFieldsName = "response_fields";
+        private const string ContextFieldsName = "context_fields";
+        private const string ModulesName = "modules";
+        private const string TypeName = "type";
+        private const string TextName = "text";
+        private const string PathName = "path";
 
         private static class ModuleType
         {
@@ -46,19 +56,19 @@ namespace Meta.WitAi.Lib
         public WitComposerInfo ImportComposerInfo()
         {
             WitComposerInfo info = new WitComposerInfo();
-            info = ExtractCanvases(info, GetCanvasJsons());
+            info = ExtractCanvases(info, GetJsonFileNames(ComposerFolderName));
             return info;
         }
         /// <summary>
-        /// Finds all the Composer canvases in the zip archive
+        /// Finds all the Json files canvases in the zip archive under the given folder
         /// </summary>
-        /// <returns>new list of entries which represent canvases</returns>
-        private List<ZipArchiveEntry> GetCanvasJsons()
+        /// <returns>new list of entries which represent json files</returns>
+        private List<ZipArchiveEntry> GetJsonFileNames(string folder)
         {
             var jsonCanvases = new List<ZipArchiveEntry>();
             foreach (var entry in _zip.Entries)
             {
-                if (entry.FullName.Contains(ComposerFolderName))
+                if (entry.FullName.Contains(folder))
                 {
                     jsonCanvases.Add(entry);
                 }
@@ -76,9 +86,11 @@ namespace Meta.WitAi.Lib
 
             for (var i = 0; i < jsonCanvases.Count; i++)
             {
-                var jsonNode = ExtractCanvasJson(_zip, jsonCanvases[i].Name);
+                var jsonNode = ExtractJson(_zip, jsonCanvases[i].Name);
                 info.canvases[i].contextMap = ParseModules(jsonNode);
-                var name = Path.GetFileNameWithoutExtension(jsonCanvases[i].Name);
+                info.canvases[i].actions = _actions.ToArray();
+                Array.Sort(info.canvases[i].actions);
+                var name = System.IO.Path.GetFileNameWithoutExtension(jsonCanvases[i].Name);
                 name = name.Substring(0, 1).ToUpper() + name.Substring(1, name.Length - 1); //capitalize 1st letter
                 info.canvases[i].canvasName = name;
             }
@@ -86,22 +98,22 @@ namespace Meta.WitAi.Lib
         }
 
         /// <summary>
-        /// Extracts a Wit JSON object representing the given canvas
+        /// Extracts a Wit JSON object representing the given json file
         /// </summary>
         /// <param name="zip">zip archive from Wit.ai export</param>
-        /// <param name="canvasName">one of the canvas names, defined in CanvasType</param>
+        /// <param name="fileName">one of the file names</param>
         /// <returns>The entire canvas structure as nested JSON objects</returns>
-        private WitResponseNode ExtractCanvasJson(ZipArchive zip, string canvasName)
+        private WitResponseNode ExtractJson(ZipArchive zip, string fileName)
         {
-            var entry = zip.Entries.First((v) => v.Name.EndsWith(canvasName));
-            if (entry.Name.EndsWith(canvasName))
+            var entry = zip.Entries.First((v) => v.Name.EndsWith(fileName));
+            if (entry.Name.EndsWith(fileName))
             {
                 var stream = entry.Open();
                 var json = new StreamReader(stream).ReadToEnd();
 
                 return JsonConvert.DeserializeToken(json);
             }
-            VLog.W("Could not open canvas named "+ canvasName);
+            VLog.W("Could not open file named "+ fileName);
             return null;
         }
 
@@ -139,10 +151,9 @@ namespace Meta.WitAi.Lib
         /// </summary>
         private ContextMapPaths ParseModules(WitResponseNode json)
         {
-
-            foreach (var module in json["modules"].Childs)
+            foreach (var module in json[ModulesName].Childs)
             {
-                switch (module["type"].Value)
+                switch (module[TypeName].Value)
                 {
                     case ModuleType.Response: // read on server, written in Unity
                         GatherMapValuesFromResponse(module);
@@ -167,7 +178,9 @@ namespace Meta.WitAi.Lib
         /// <param name="module">the JSON representation of the module</param>
         private void GatherMapValuesFromResponse(WitResponseNode module)
         {
-            var responseText = module["response_fields"]["text"].ToString();
+            const string actionName = "action";
+
+            var responseText = module[ResponseFieldsName][TextName].ToString();
             var matches = Regex.Match(responseText, @"{.*}");
             foreach (Group match in matches.Groups)
             {
@@ -181,6 +194,10 @@ namespace Meta.WitAi.Lib
                     continue;
                 _clientVariables.Add(path);
             }
+
+            string action = module[ResponseFieldsName][actionName].ToString();
+            if (String.IsNullOrEmpty(action)) return;
+            _actions.Add(action);
         }
 
 
@@ -190,10 +207,14 @@ namespace Meta.WitAi.Lib
         /// <param name="module"></param>
         private void GatherMapValuesFromDecision(WitResponseNode module)
         {
-            var conditionNodes = module["decision_fields"]?["condition_nodes"];
-            for (var i = 0; i < conditionNodes?.Count; i++)
+            const string decisionFieldsName = "decision_fields";
+            const string conditionNodesName = "condition_nodes";
+            const string contextWithValueFieldsName = "context_with_value_fields";
+
+            var nodes = module[decisionFieldsName]?[conditionNodesName];
+            for (var i = 0; i < nodes?.Count; i++)
             {
-                var path = conditionNodes[i]["context_with_value_fields"]?["path"].Value;
+                var path = nodes[i][contextWithValueFieldsName]?[PathName].Value;
                 if (IsPathAlreadyDiscovered(path))
                     continue;
                 if (MoveToShared(path))
@@ -232,18 +253,26 @@ namespace Meta.WitAi.Lib
         /// </summary>
         private void GatherMapValuesFromContext(WitResponseNode module)
         {
+            const string contextTypeName = "context_type";
+            const string setFieldsName = "set_fields";
+            const string saveFieldsName = "save_fields";
+            const string saveName = "save";
+            const string setName = "set";
+            const string entityName = "entity";
+            const string valueName = "value";
+
             string path, value;
-            var saveFields = module["context_fields"]?["save_fields"];
-            var setFields = module["context_fields"]?["set_fields"];
-            switch (module["context_fields"]?["context_type"])
+            var saves = module[ContextFieldsName]?[saveFieldsName];
+            var sets = module[ContextFieldsName]?[setFieldsName];
+            switch (module[ContextFieldsName]?[contextTypeName])
             {
-                case "save":
-                    path = saveFields?["path"].ToString();
-                    value = saveFields?["entity"].ToString();
+                case saveName:
+                    path = saves?[PathName].ToString();
+                    value = saves?[entityName].ToString();
                     break;
-                case "set":
-                    path = module["context_fields"]?["set_fields"]?["path"].ToString();
-                    value = setFields?["value"].ToString();
+                case setName:
+                    path = module[ContextFieldsName]?[setFieldsName]?[PathName].ToString();
+                    value = sets?[valueName].ToString();
                     break;
                 default:
                     return;
@@ -296,6 +325,28 @@ namespace Meta.WitAi.Lib
             _clientVariables.Clear();
 
             return result;
+        }
+
+
+        public WitCharacterInfo[] ImportCharacterInfo()
+        {
+            WitCharacterInfo[] info = ExtractCharacters(GetJsonFileNames(CharacterFolderName));
+            return info;
+        }
+
+        private WitCharacterInfo[] ExtractCharacters(List<ZipArchiveEntry> jsonFiles)
+        {
+            const string voiceConfigName = "voice_config";
+            WitCharacterInfo[] characters = new WitCharacterInfo[jsonFiles.Count];
+
+            for (var i = 0; i < jsonFiles.Count; i++)
+            {
+                var jsonNode = ExtractJson(_zip, jsonFiles[i].Name);
+                var voiceConfig = jsonNode[voiceConfigName];
+                characters[i] = JsonConvert.DeserializeObject<WitCharacterInfo>(jsonNode);
+                characters[i].voiceConfig = JsonConvert.DeserializeObject<WitVoiceConfig>(voiceConfig);
+            }
+            return characters;
         }
     }
 }

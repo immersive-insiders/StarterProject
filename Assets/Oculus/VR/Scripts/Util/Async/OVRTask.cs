@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -76,6 +76,7 @@ internal static class OVRTask
 /// which will eventually return a <typeparamref name="TResult"/></para>
 /// <para>- poll the <see cref="IsCompleted"/> property and then call <see cref="GetResult"/></para>
 /// <para>- pass a delegate by calling <see cref="ContinueWith(Action{TResult})"/>. Note that an additional state <c>object</c> can get passed in and added as a parameter of the callback, see <see cref="ContinueWith{T}"/></para>
+/// Requires the main thread to complete the await contract - blocking can result in an infinite loop.
 /// </remarks>
 /// <typeparam name="TResult">The type of result being awaited.</typeparam>
 public readonly struct OVRTask<TResult> : IEquatable<OVRTask<TResult>>, IDisposable
@@ -325,6 +326,7 @@ public readonly struct OVRTask<TResult> : IEquatable<OVRTask<TResult>>, IDisposa
     /// var result = await GetResultAsync();
     /// ]]></code>
     /// </example>
+    /// Requires the main thread to complete the await contract - blocking can result in an infinite loop.
     /// </remarks>
     /// <returns>Returns an Awaiter-like object that satisfies the await pattern.</returns>
     public Awaiter GetAwaiter() => new Awaiter(this);

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using System;
 using System.Linq;
+using UnityEngine;
 
 /// <summary>
 /// Core System for the OVRProjectSetup Tool
@@ -79,7 +80,9 @@ public static class OVRProjectSetup
         ProcessorQueue = new OVRConfigurationTaskProcessorQueue();
         ConsoleLinkEventHandler.OnConsoleLink += OnConsoleLink;
         RestoreRegistry();
+
     }
+
 
     internal static void SetupTemporaryRegistry()
     {

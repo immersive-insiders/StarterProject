@@ -100,7 +100,7 @@ namespace Assets.Oculus.VR.Editor
 
             // Load redist packages by calling list-redists in the CLI
             string dataPath = Application.dataPath;
-            var thread = new Thread(delegate()
+            var thread = new Thread(delegate ()
             {
                 retryCount = 0;
                 LoadRedistPackages(dataPath);
@@ -559,7 +559,7 @@ namespace Assets.Oculus.VR.Editor
             {
                 ranSelfUpdate = true;
                 activeProcess = true;
-                var updateThread = new Thread(delegate()
+                var updateThread = new Thread(delegate ()
                 {
                     retryCount = 0;
                     CheckForUpdate(dataPath);
@@ -570,7 +570,7 @@ namespace Assets.Oculus.VR.Editor
             string uploadCommand;
             if (genUploadCommand(targetPlatform, out uploadCommand))
             {
-                var thread = new Thread(delegate()
+                var thread = new Thread(delegate ()
                 {
                     // Wait for update process to finish before starting upload process
                     while (activeProcess)

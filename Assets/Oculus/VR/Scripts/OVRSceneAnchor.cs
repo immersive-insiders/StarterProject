@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -46,6 +46,11 @@ public sealed class OVRSceneAnchor : MonoBehaviour
     public Guid Uuid { get; private set; }
 
     /// <summary>
+    /// Associated OVRAnchor
+    /// </summary>
+    public OVRAnchor Anchor { get; private set; }
+
+    /// <summary>
     /// Indicates whether this anchor is tracked by the system.
     /// </summary>
     public bool IsTracked { get; internal set; }
@@ -80,8 +85,11 @@ public sealed class OVRSceneAnchor : MonoBehaviour
         _pose = null;
     }
 
-    internal void Initialize(OVRSpace space, Guid uuid)
+    public void Initialize(OVRAnchor anchor)
     {
+        var space = (OVRSpace)anchor.Handle;
+        var uuid = anchor.Uuid;
+
         if (Space.Valid)
             throw new InvalidOperationException($"[{uuid}] {nameof(OVRSceneAnchor)} has already been initialized.");
 
@@ -90,6 +98,7 @@ public sealed class OVRSceneAnchor : MonoBehaviour
 
         Space = space;
         Uuid = uuid;
+        Anchor = anchor;
 
         ClearPoseCache();
 
@@ -109,12 +118,14 @@ public sealed class OVRSceneAnchor : MonoBehaviour
             if (updateTransformSucceeded)
             {
                 IsTracked = true;
-                OVRSceneManager.Development.Log(nameof(OVRSceneAnchor), $"[{uuid}] Initial transform set.");
+                OVRSceneManager.Development.Log(nameof(OVRSceneAnchor),
+                    $"[{uuid}] Initial transform set.", gameObject);
             }
             else
             {
                 OVRSceneManager.Development.LogWarning(nameof(OVRSceneAnchor),
-                    $"[{uuid}] {nameof(OVRPlugin.TryLocateSpace)} failed. The entity may have the wrong initial transform.");
+                    $"[{uuid}] {nameof(OVRPlugin.TryLocateSpace)} failed. The entity may have the wrong initial transform.",
+                    gameObject);
             }
         }
 
@@ -134,7 +145,7 @@ public sealed class OVRSceneAnchor : MonoBehaviour
         if (other == null)
             throw new ArgumentNullException(nameof(other));
 
-        Initialize(other.Space, other.Uuid);
+        Initialize(other.Anchor);
     }
 
     /// <summary>
@@ -157,7 +168,9 @@ public sealed class OVRSceneAnchor : MonoBehaviour
 
         if (!useCache || _pose == null)
         {
-            if (!OVRPlugin.TryLocateSpace(Space, OVRPlugin.GetTrackingOriginType(), out var pose))
+            var tryLocateSpace = OVRPlugin.TryLocateSpace(Space, OVRPlugin.GetTrackingOriginType(), out var pose,
+                out var locationFlags);
+            if (!tryLocateSpace || !locationFlags.IsOrientationValid() || !locationFlags.IsPositionValid())
             {
                 return false;
             }
@@ -207,7 +220,8 @@ public sealed class OVRSceneAnchor : MonoBehaviour
         if (!AnchorReferenceCountDictionary.TryGetValue(Space, out var referenceCount))
         {
             OVRSceneManager.Development.LogError(nameof(OVRSceneAnchor),
-                $"[Anchor {Space.Handle}] has not been found, can't find it for deletion");
+                $"[Anchor {Space.Handle}] has not been found, can't find it for deletion",
+                gameObject);
             return;
         }
 

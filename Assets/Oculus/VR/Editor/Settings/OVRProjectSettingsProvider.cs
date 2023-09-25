@@ -25,6 +25,7 @@ using UnityEngine;
 internal class OVRProjectSettingsProvider : SettingsProvider
 {
     public const string SettingsName = "Settings";
+    public static string SettingsPath => $"{OVRProjectSetupSettingsProvider.SettingsPath}/{SettingsName}";
 
     private OVRProjectSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
         : base(path, scopes, keywords)
@@ -34,21 +35,23 @@ internal class OVRProjectSettingsProvider : SettingsProvider
     [SettingsProvider]
     public static SettingsProvider CreateProjectValidationSettingsProvider()
     {
-        return new OVRProjectSettingsProvider($"{OVRProjectSetupSettingsProvider.SettingsPath}/{SettingsName}",
-            SettingsScope.Project);
+        return new OVRProjectSettingsProvider(SettingsPath, SettingsScope.Project);
     }
 
     public override void OnGUI(string searchContext)
     {
-        using (var check = new EditorGUI.ChangeCheckScope())
-        {
-            var telemetryEnabled = EditorGUILayout.Toggle(new GUIContent("Enable Telemetry"),
-                OVRRuntimeSettings.Instance.TelemetryEnabled);
+        using var check = new EditorGUI.ChangeCheckScope();
+        var telemetryEnabled = EditorGUILayout.Toggle(new GUIContent("Enable Telemetry"),
+            OVRRuntimeSettings.Instance.TelemetryEnabled);
 
-            if (check.changed)
-            {
-                OVRRuntimeSettings.Instance.TelemetryEnabled = telemetryEnabled;
-            }
+        if (check.changed)
+        {
+            OVRRuntimeSettings.Instance.SetTelemetryEnabled(telemetryEnabled, OVRTelemetryConstants.OVRManager.ConsentOrigins.Settings);
         }
+    }
+
+    public static void OpenSettingsWindow(OVRProjectSetupSettingsProvider.Origins origin)
+    {
+        SettingsService.OpenProjectSettings(SettingsPath);
     }
 }

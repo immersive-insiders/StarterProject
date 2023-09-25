@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || (UNITY_ANDROID && !UNITY_EDITOR))
+#define OVRPLUGIN_UNSUPPORTED_PLATFORM
+#endif
+
 using System;
 using UnityEngine;
 
@@ -28,13 +32,17 @@ internal static partial class OVRTelemetry
         get
         {
 
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+            return false;
+#endif
+
 
             return OVRRuntimeSettings.Instance.TelemetryEnabled;
         }
     }
 
     private static readonly TelemetryClient InactiveClient = new NullTelemetryClient();
-    private static readonly TelemetryClient ActiveClient = new QPLTelemetryClient();
+    public static readonly TelemetryClient ActiveClient = new QPLTelemetryClient();
     public static TelemetryClient Client => IsActive ? ActiveClient : InactiveClient;
 
     public readonly struct MarkerPoint : IDisposable

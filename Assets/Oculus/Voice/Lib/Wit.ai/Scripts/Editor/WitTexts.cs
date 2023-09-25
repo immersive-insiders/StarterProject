@@ -26,6 +26,8 @@ namespace Meta.WitAi
             public string WitDocsTitle;
             public string WitDocsUrl;
             public string VLogLevelLabel;
+            public string TelemetryLevelLabel;
+            public string TelemetryEnabledLabel;
             public string ConfigurationFileManagerLabel;
             public string ConfigurationFileNameLabel;
             public string ConfigurationSelectLabel;
@@ -98,6 +100,15 @@ namespace Meta.WitAi
 
             [Header("Configuration Conduit Texts")]
             public string ConfigurationConduitMissingTokenLabel;
+            public string ConfigurationConduitUseConduitLabel;
+            public string ConfigurationConduitRelaxedResolutionsLabel;
+            public string ConfigurationConduitRelaxedResolutionsTooltip;
+            public string ConfigurationConduitUpdateManifestLabel;
+            public string ConfigurationConduitGenerateManifestLabel;
+            public string ConfigurationConduitSelectManifestLabel;
+            public string ConfigurationConduitSpecifyAssembliesLabel;
+            public string ConfigurationConduitSyncEntitiesLabel;
+            public string ConfigurationConduitAutoTrainLabel;
 
             [Header("Configuration Intent Texts")]
             public string ConfigurationIntentsTabLabel;

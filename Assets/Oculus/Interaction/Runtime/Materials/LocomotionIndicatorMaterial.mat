@@ -71,7 +71,7 @@ Material:
     - _DistortionStrengthScaled: 0
     - _DstBlend: 10
     - _EmissionEnabled: 0
-    - _Fade: 0.4
+    - _Fade: 1
     - _FadeSign: 1
     - _FlipbookMode: 0
     - _GlossMapScale: 1
@@ -82,6 +82,8 @@ Material:
     - _Metallic: 0
     - _Mode: 3
     - _OcclusionStrength: 1
+    - _OffsetFactor: 0
+    - _OffsetUnits: 0
     - _Parallax: 0.02
     - _Progress: 0
     - _Shrink: 0.227

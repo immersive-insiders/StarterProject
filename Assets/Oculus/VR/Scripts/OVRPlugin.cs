@@ -55,7 +55,7 @@ public static partial class OVRPlugin
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
     public static readonly System.Version wrapperVersion = _versionZero;
 #else
-    public static readonly System.Version wrapperVersion = OVRP_1_86_0.version;
+    public static readonly System.Version wrapperVersion = OVRP_1_88_0.version;
 #endif
 
 #if !OVRPLUGIN_UNSUPPORTED_PLATFORM
@@ -201,6 +201,7 @@ public static partial class OVRPlugin
         Failure_SpaceNetworkTimeout = -2003,
         Failure_SpaceNetworkRequestFailed = -2004,
 
+
     }
 
     public static bool IsSuccess(this Result result) => result >= 0;
@@ -217,7 +218,7 @@ public static partial class OVRPlugin
     public static void SetLogCallback2(LogCallback2DelegateType logCallback)
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
-            // do nothing
+        // do nothing
 #else
         if (version >= OVRP_1_70_0.version)
         {
@@ -318,6 +319,7 @@ public static partial class OVRPlugin
         None = 0,
         Touch = 1,
         TouchPro = 2,
+        TouchPlus = 4,
     }
 
     public enum Handedness
@@ -387,7 +389,7 @@ public static partial class OVRPlugin
         Oculus_Quest = 8,
         Oculus_Quest_2 = 9,
         Meta_Quest_Pro = 10,
-        Placeholder_11,
+        Meta_Quest_3 = 11,
         Placeholder_12,
         Placeholder_13,
         Placeholder_14,
@@ -401,7 +403,7 @@ public static partial class OVRPlugin
         Oculus_Link_Quest,
         Oculus_Link_Quest_2,
         Meta_Link_Quest_Pro,
-        PC_Placeholder_4104,
+        Meta_Link_Quest_3,
         PC_Placeholder_4105,
         PC_Placeholder_4106,
         PC_Placeholder_4107
@@ -419,6 +421,20 @@ public static partial class OVRPlugin
         Fisheye = 9,
         KeyboardHandsPassthrough = 10,
         KeyboardMaskedHandsPassthrough = 11,
+    }
+
+    public enum LayerSuperSamplingType
+    {
+        None = 0,
+        Normal = 1 << 12,
+        Quality = 1 << 8,
+    }
+
+    public enum LayerSharpenType
+    {
+        None = 0,
+        Normal = 1 << 13,
+        Quality = 1 << 16,
     }
 
     public static bool IsPassthroughShape(OverlayShape shape)
@@ -615,6 +631,7 @@ public static partial class OVRPlugin
 
         Hidden = unchecked((int)0x000000200),
 
+        AutoFiltering = unchecked((int)0x00000400),
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -707,7 +724,9 @@ public static partial class OVRPlugin
 
         public static readonly TextureRectMatrixf zero = new TextureRectMatrixf
         {
-            leftRect = new Rect(0, 0, 1, 1), rightRect = new Rect(0, 0, 1, 1), leftScaleBias = new Vector4(1, 1, 0, 0),
+            leftRect = new Rect(0, 0, 1, 1),
+            rightRect = new Rect(0, 0, 1, 1),
+            leftScaleBias = new Vector4(1, 1, 0, 0),
             rightScaleBias = new Vector4(1, 1, 0, 0)
         };
 
@@ -724,8 +743,10 @@ public static partial class OVRPlugin
     {
         public Posef Pose;
         public Vector3f Velocity;
+        [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
         public Vector3f Acceleration;
         public Vector3f AngularVelocity;
+        [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
         public Vector3f AngularAcceleration;
         public double Time;
 
@@ -733,9 +754,11 @@ public static partial class OVRPlugin
         {
             Pose = Posef.identity,
             Velocity = Vector3f.zero,
-            Acceleration = Vector3f.zero,
             AngularVelocity = Vector3f.zero,
+#pragma warning disable CS0618 // Type or member is obsolete
+            Acceleration = Vector3f.zero,
             AngularAcceleration = Vector3f.zero
+#pragma warning restore CS0618 // Type or member is obsolete
         };
     }
 
@@ -747,6 +770,66 @@ public static partial class OVRPlugin
         Index = 0x04,
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ControllerState6
+    {
+        public uint ConnectedControllers;
+        public uint Buttons;
+        public uint Touches;
+        public uint NearTouches;
+        public float LIndexTrigger;
+        public float RIndexTrigger;
+        public float LHandTrigger;
+        public float RHandTrigger;
+        public Vector2f LThumbstick;
+        public Vector2f RThumbstick;
+        public Vector2f LTouchpad;
+        public Vector2f RTouchpad;
+        public byte LBatteryPercentRemaining;
+        public byte RBatteryPercentRemaining;
+        public byte LRecenterCount;
+        public byte RRecenterCount;
+        public float LThumbRestForce;
+        public float RThumbRestForce;
+        public float LStylusForce;
+        public float RStylusForce;
+        public float LIndexTriggerCurl;
+        public float RIndexTriggerCurl;
+        public float LIndexTriggerSlide;
+        public float RIndexTriggerSlide;
+        public float LIndexTriggerForce;
+        public float RIndexTriggerForce;
+
+        public ControllerState6(ControllerState5 cs)
+        {
+            ConnectedControllers = cs.ConnectedControllers;
+            Buttons = cs.Buttons;
+            Touches = cs.Touches;
+            NearTouches = cs.NearTouches;
+            LIndexTrigger = cs.LIndexTrigger;
+            RIndexTrigger = cs.RIndexTrigger;
+            LHandTrigger = cs.LHandTrigger;
+            RHandTrigger = cs.RHandTrigger;
+            LThumbstick = cs.LThumbstick;
+            RThumbstick = cs.RThumbstick;
+            LTouchpad = cs.LTouchpad;
+            RTouchpad = cs.RTouchpad;
+            LBatteryPercentRemaining = cs.LBatteryPercentRemaining;
+            RBatteryPercentRemaining = cs.RBatteryPercentRemaining;
+            LRecenterCount = cs.LRecenterCount;
+            RRecenterCount = cs.RRecenterCount;
+            LThumbRestForce = cs.LThumbRestForce;
+            RThumbRestForce = cs.RThumbRestForce;
+            LStylusForce = cs.LStylusForce;
+            RStylusForce = cs.RStylusForce;
+            LIndexTriggerCurl = cs.LIndexTriggerCurl;
+            RIndexTriggerCurl = cs.RIndexTriggerCurl;
+            LIndexTriggerSlide = cs.LIndexTriggerSlide;
+            RIndexTriggerSlide = cs.RIndexTriggerSlide;
+            LIndexTriggerForce = 0.0f;
+            RIndexTriggerForce = 0.0f;
+        }
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct ControllerState5
@@ -2051,11 +2134,7 @@ public static partial class OVRPlugin
     }
 
     [StructLayout(LayoutKind.Sequential)]
-#if OVRPLUGIN_TESTING
-    public struct FaceExpressionStatusInternal
-#else
     private struct FaceExpressionStatusInternal
-#endif // OVRPLUGIN_TESTING
     {
         public Bool IsValid;
         public Bool IsEyeFollowingBlendshapesValid;
@@ -2633,6 +2712,7 @@ public static partial class OVRPlugin
         SemanticLabels = 5,
         RoomLayout = 6,
         SpaceContainer = 7,
+        TriangleMesh = 1000269000,
     }
 
     public enum SpaceStorageLocation
@@ -2720,21 +2800,24 @@ public static partial class OVRPlugin
     }
 
 
-    public static string GuidToUuidString(Guid guid) {
-      const int GUID_BYTE_LENGTH = 36;
+    public static string GuidToUuidString(Guid guid)
+    {
+        const int GUID_BYTE_LENGTH = 36;
 
-      byte[] guidBytes = guid.ToByteArray();
-      string unformattedUuid = BitConverter.ToString(guidBytes).Replace("-", "").ToLower();
-      var formattedUuid = new System.Text.StringBuilder(GUID_BYTE_LENGTH);
-      for (var i = 0; i < 32; i++) {
-        formattedUuid.Append(unformattedUuid[i]);
+        byte[] guidBytes = guid.ToByteArray();
+        string unformattedUuid = BitConverter.ToString(guidBytes).Replace("-", "").ToLower();
+        var formattedUuid = new System.Text.StringBuilder(GUID_BYTE_LENGTH);
+        for (var i = 0; i < 32; i++)
+        {
+            formattedUuid.Append(unformattedUuid[i]);
 
-        if (i == 7 || i == 11 || i == 15 || i == 19) {
-          formattedUuid.Append("-");
+            if (i == 7 || i == 11 || i == 15 || i == 19)
+            {
+                formattedUuid.Append("-");
+            }
         }
-      }
 
-      return formattedUuid.ToString();
+        return formattedUuid.ToString();
     }
 
 
@@ -3520,7 +3603,7 @@ public static partial class OVRPlugin
         bool overridePerLayerColorScaleAndOffset = false, Vector4 colorScale = default(Vector4),
         Vector4 colorOffset = default(Vector4), bool expensiveSuperSample = false, bool bicubic = false,
         bool efficientSuperSample = false, bool efficientSharpen = false, bool expensiveSharpen = false,
-        bool hidden = false, bool secureContent = false
+        bool hidden = false, bool secureContent = false, bool automaticFiltering = false
     )
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
@@ -3552,7 +3635,8 @@ public static partial class OVRPlugin
                 flags |= (uint)OverlayFlag.BicubicFiltering;
             if (secureContent)
                 flags |= (uint)OverlayFlag.SecureContent;
-
+            if (automaticFiltering)
+                flags |= (uint) OverlayFlag.AutoFiltering;
             if (shape == OverlayShape.Cylinder || shape == OverlayShape.Cubemap)
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -3818,6 +3902,7 @@ public static partial class OVRPlugin
 #endif
     }
 
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     public static Vector3f GetNodeAcceleration(Node nodeId, Step stepId)
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
@@ -3839,6 +3924,7 @@ public static partial class OVRPlugin
 #endif
     }
 
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     public static Vector3f GetNodeAngularAcceleration(Node nodeId, Step stepId)
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
@@ -3996,8 +4082,64 @@ public static partial class OVRPlugin
 #endif
     }
 
+    public static bool AreHandPosesGeneratedByControllerData(Step stepId, Node nodeId)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_86_0.version)
+        {
+            Bool generatedByController = Bool.False;
+            Result result = OVRP_1_86_0.ovrp_AreHandPosesGeneratedByControllerData(stepId, nodeId, ref generatedByController);
+            if(result == Result.Success && generatedByController == Bool.True) {
+                return true;
+            }
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+#endif
+    }
 
+    public static bool SetSimultaneousHandsAndControllersEnabled(bool enabled)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_88_0.version)
+        {
+            Result result = OVRP_1_88_0.ovrp_SetSimultaneousHandsAndControllersEnabled(enabled ? Bool.True : Bool.False);
+            if(result == Result.Success) {
+                return true;
+            }
+        }
 
+        return false;
+#endif
+    }
+
+    public static bool GetControllerIsInHand(Step stepId, Node nodeId)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_86_0.version)
+        {
+            Bool isInHand = Bool.True;
+            Result result = OVRP_1_86_0.ovrp_GetControllerIsInHand(stepId, nodeId, ref isInHand);
+            if(result == Result.Success && isInHand == Bool.False) {
+                return false;
+            }
+            return true;
+        }
+        else
+        {
+            return true;
+        }
+#endif
+    }
 
     public static Posef GetCurrentTrackingTransformPose()
     {
@@ -4130,6 +4272,21 @@ public static partial class OVRPlugin
 #endif
     }
 
+    public static ControllerState6 GetControllerState6(uint controllerMask)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return new ControllerState6();
+#else
+        if (version >= OVRP_1_83_0.version)
+        {
+            ControllerState6 controllerState = new ControllerState6();
+            OVRP_1_83_0.ovrp_GetControllerState6(controllerMask, ref controllerState);
+            return controllerState;
+        }
+
+        return new ControllerState6(GetControllerState5(controllerMask));
+#endif
+    }
 
 
     public static InteractionProfile GetCurrentInteractionProfile(Hand hand)
@@ -4148,6 +4305,21 @@ public static partial class OVRPlugin
 #endif
     }
 
+    public static InteractionProfile GetCurrentDetachedInteractionProfile(Hand hand)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return InteractionProfile.None;
+#else
+        InteractionProfile interactionProfile = InteractionProfile.None;
+
+        if (version >= OVRP_1_86_0.version)
+        {
+            OVRP_1_86_0.ovrp_GetCurrentDetachedInteractionProfile(hand, out interactionProfile);
+        }
+
+        return interactionProfile;
+#endif
+    }
 
     public static bool SetControllerVibration(uint controllerMask, float frequency, float amplitude)
     {
@@ -4511,6 +4683,87 @@ public static partial class OVRPlugin
 #endif
     }
 
+    public static bool SetControllerDrivenHandPoses(bool controllerDrivenHandPoses)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_86_0.version)
+        {
+            Result result = OVRP_1_86_0.ovrp_SetControllerDrivenHandPoses(controllerDrivenHandPoses ? Bool.True : Bool.False);
+            return (result == Result.Success);
+        }
+
+        return false;
+#endif
+    }
+
+    public static bool SetControllerDrivenHandPosesAreNatural(bool controllerDrivenHandPosesAreNatural)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_87_0.version)
+        {
+            Result result = OVRP_1_87_0.ovrp_SetControllerDrivenHandPosesAreNatural(controllerDrivenHandPosesAreNatural ? Bool.True : Bool.False);
+            return (result == Result.Success);
+        }
+
+        return false;
+#endif
+    }
+
+    public static bool IsControllerDrivenHandPosesEnabled()
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_86_0.version)
+        {
+            Bool enabled = OVRPlugin.Bool.False;
+            Result result = OVRP_1_86_0.ovrp_IsControllerDrivenHandPosesEnabled(ref enabled);
+            if (result == Result.Success)
+            {
+                return enabled == OVRPlugin.Bool.True;
+            }
+
+            //Debug.LogError(
+            //    "Unable to determine if controller driven hand poses are enabled. Try calling IsControllerDrivenHandPosesEnabled() " +
+            //    "while the XR plug-in is initialized. Failed with reason: " + result);
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+#endif
+    }
+
+    public static bool AreControllerDrivenHandPosesNatural()
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_87_0.version)
+        {
+            Bool enabled = OVRPlugin.Bool.False;
+            Result result = OVRP_1_87_0.ovrp_AreControllerDrivenHandPosesNatural(ref enabled);
+            if (result == Result.Success)
+            {
+                return enabled == OVRPlugin.Bool.True;
+            }
+
+            //Debug.LogError(
+            //    "Unable to determine if controller driven hand poses are natural. Try calling AreControllerDrivenHandPosesNatural() " +
+            //    "while the XR plug-in is initialized. Failed with reason: " + result);
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+#endif
+    }
 
     public static EyeTextureFormat GetDesiredEyeTextureFormat()
     {
@@ -4902,6 +5155,56 @@ public static partial class OVRPlugin
 #endif
     }
 
+    public static bool SetMultimodalHandsControllersSupported(bool value)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_86_0.version)
+        {
+            Result result = OVRP_1_86_0.ovrp_SetMultimodalHandsControllersSupported(ToBool(value));
+            if (result != Result.Success)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+#endif
+    }
+
+    public static bool IsMultimodalHandsControllersSupported()
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_86_0.version)
+        {
+            Bool supported = OVRPlugin.Bool.False;
+            Result result = OVRP_1_86_0.ovrp_IsMultimodalHandsControllersSupported(ref supported);
+            if (result == Result.Success)
+            {
+                return supported == OVRPlugin.Bool.True;
+            }
+
+            // This is making Virtual Keyboard Tests fail.
+            /*
+            Debug.LogError(
+                "Unable to determine whether concurrent hands and controllers mode is supported. Try calling IsMultimodalHandsControllersSupported() " +
+                "while the XR plug-in is initialized. Failed with reason: " + result);
+            */
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+#endif
+    }
 
     public static bool IsInsightPassthroughSupported()
     {
@@ -4993,7 +5296,7 @@ public static partial class OVRPlugin
     public static Result GetInsightPassthroughInitializationState()
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
-                return Result.Failure_Unsupported;
+        return Result.Failure_Unsupported;
 #else
         if (version >= OVRP_1_66_0.version)
         {
@@ -6349,7 +6652,7 @@ public static partial class OVRPlugin
 
     public static bool SendEvent(string name, string param = "", string source = "")
     {
-#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM || OVRPLUGIN_EDITOR_MOCK_ENABLED
         return false;
 #else
         if (version >= OVRP_1_30_0.version)
@@ -6540,7 +6843,7 @@ public static partial class OVRPlugin
 
     public static bool AddCustomMetadata(string name, string param = "")
     {
-#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM || OVRPLUGIN_EDITOR_MOCK_ENABLED
         return false;
 #else
         if (version >= OVRP_1_32_0.version)
@@ -7165,7 +7468,7 @@ public static partial class OVRPlugin
             Posef rightControllerPose)
         {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
-        return false;
+            return false;
 #else
             if (version >= OVRP_1_49_0.version)
             {
@@ -7608,97 +7911,95 @@ public static partial class OVRPlugin
 
         if (version < OVRP_1_78_0.version) return false;
 
-
+        // Avoid per-frame allocations if caller provides appropriately pre-initialized BodyState
+        const int jointCount = (int)BoneId.Body_End;
+        if (bodyState.JointLocations?.Length != jointCount)
         {
-            // Avoid per-frame allocations if caller provides appropriately pre-initialized BodyState
-            const int jointCount = (int)BoneId.Body_End;
-            if (bodyState.JointLocations?.Length != jointCount)
-            {
-                bodyState.JointLocations = new BodyJointLocation[jointCount];
-            }
-
-            var result = OVRP_1_78_0.ovrp_GetBodyState(stepId, -1, out var bodyStateInternal);
-            if (result != Result.Success) return false;
-            if (bodyStateInternal.IsActive != Bool.True) return false;
-
-            bodyState.Confidence = bodyStateInternal.Confidence;
-            bodyState.SkeletonChangedCount = bodyStateInternal.SkeletonChangedCount;
-            bodyState.Time = bodyStateInternal.Time;
-            bodyState.JointLocations[0] = bodyStateInternal.JointLocation_0;
-            bodyState.JointLocations[1] = bodyStateInternal.JointLocation_1;
-            bodyState.JointLocations[2] = bodyStateInternal.JointLocation_2;
-            bodyState.JointLocations[3] = bodyStateInternal.JointLocation_3;
-            bodyState.JointLocations[4] = bodyStateInternal.JointLocation_4;
-            bodyState.JointLocations[5] = bodyStateInternal.JointLocation_5;
-            bodyState.JointLocations[6] = bodyStateInternal.JointLocation_6;
-            bodyState.JointLocations[7] = bodyStateInternal.JointLocation_7;
-            bodyState.JointLocations[8] = bodyStateInternal.JointLocation_8;
-            bodyState.JointLocations[9] = bodyStateInternal.JointLocation_9;
-            bodyState.JointLocations[10] = bodyStateInternal.JointLocation_10;
-            bodyState.JointLocations[11] = bodyStateInternal.JointLocation_11;
-            bodyState.JointLocations[12] = bodyStateInternal.JointLocation_12;
-            bodyState.JointLocations[13] = bodyStateInternal.JointLocation_13;
-            bodyState.JointLocations[14] = bodyStateInternal.JointLocation_14;
-            bodyState.JointLocations[15] = bodyStateInternal.JointLocation_15;
-            bodyState.JointLocations[16] = bodyStateInternal.JointLocation_16;
-            bodyState.JointLocations[17] = bodyStateInternal.JointLocation_17;
-            bodyState.JointLocations[18] = bodyStateInternal.JointLocation_18;
-            bodyState.JointLocations[19] = bodyStateInternal.JointLocation_19;
-            bodyState.JointLocations[20] = bodyStateInternal.JointLocation_20;
-            bodyState.JointLocations[21] = bodyStateInternal.JointLocation_21;
-            bodyState.JointLocations[22] = bodyStateInternal.JointLocation_22;
-            bodyState.JointLocations[23] = bodyStateInternal.JointLocation_23;
-            bodyState.JointLocations[24] = bodyStateInternal.JointLocation_24;
-            bodyState.JointLocations[25] = bodyStateInternal.JointLocation_25;
-            bodyState.JointLocations[26] = bodyStateInternal.JointLocation_26;
-            bodyState.JointLocations[27] = bodyStateInternal.JointLocation_27;
-            bodyState.JointLocations[28] = bodyStateInternal.JointLocation_28;
-            bodyState.JointLocations[29] = bodyStateInternal.JointLocation_29;
-            bodyState.JointLocations[30] = bodyStateInternal.JointLocation_30;
-            bodyState.JointLocations[31] = bodyStateInternal.JointLocation_31;
-            bodyState.JointLocations[32] = bodyStateInternal.JointLocation_32;
-            bodyState.JointLocations[33] = bodyStateInternal.JointLocation_33;
-            bodyState.JointLocations[34] = bodyStateInternal.JointLocation_34;
-            bodyState.JointLocations[35] = bodyStateInternal.JointLocation_35;
-            bodyState.JointLocations[36] = bodyStateInternal.JointLocation_36;
-            bodyState.JointLocations[37] = bodyStateInternal.JointLocation_37;
-            bodyState.JointLocations[38] = bodyStateInternal.JointLocation_38;
-            bodyState.JointLocations[39] = bodyStateInternal.JointLocation_39;
-            bodyState.JointLocations[40] = bodyStateInternal.JointLocation_40;
-            bodyState.JointLocations[41] = bodyStateInternal.JointLocation_41;
-            bodyState.JointLocations[42] = bodyStateInternal.JointLocation_42;
-            bodyState.JointLocations[43] = bodyStateInternal.JointLocation_43;
-            bodyState.JointLocations[44] = bodyStateInternal.JointLocation_44;
-            bodyState.JointLocations[45] = bodyStateInternal.JointLocation_45;
-            bodyState.JointLocations[46] = bodyStateInternal.JointLocation_46;
-            bodyState.JointLocations[47] = bodyStateInternal.JointLocation_47;
-            bodyState.JointLocations[48] = bodyStateInternal.JointLocation_48;
-            bodyState.JointLocations[49] = bodyStateInternal.JointLocation_49;
-            bodyState.JointLocations[50] = bodyStateInternal.JointLocation_50;
-            bodyState.JointLocations[51] = bodyStateInternal.JointLocation_51;
-            bodyState.JointLocations[52] = bodyStateInternal.JointLocation_52;
-            bodyState.JointLocations[53] = bodyStateInternal.JointLocation_53;
-            bodyState.JointLocations[54] = bodyStateInternal.JointLocation_54;
-            bodyState.JointLocations[55] = bodyStateInternal.JointLocation_55;
-            bodyState.JointLocations[56] = bodyStateInternal.JointLocation_56;
-            bodyState.JointLocations[57] = bodyStateInternal.JointLocation_57;
-            bodyState.JointLocations[58] = bodyStateInternal.JointLocation_58;
-            bodyState.JointLocations[59] = bodyStateInternal.JointLocation_59;
-            bodyState.JointLocations[60] = bodyStateInternal.JointLocation_60;
-            bodyState.JointLocations[61] = bodyStateInternal.JointLocation_61;
-            bodyState.JointLocations[62] = bodyStateInternal.JointLocation_62;
-            bodyState.JointLocations[63] = bodyStateInternal.JointLocation_63;
-            bodyState.JointLocations[64] = bodyStateInternal.JointLocation_64;
-            bodyState.JointLocations[65] = bodyStateInternal.JointLocation_65;
-            bodyState.JointLocations[66] = bodyStateInternal.JointLocation_66;
-            bodyState.JointLocations[67] = bodyStateInternal.JointLocation_67;
-            bodyState.JointLocations[68] = bodyStateInternal.JointLocation_68;
-            bodyState.JointLocations[69] = bodyStateInternal.JointLocation_69;
-
-            return true;
+            bodyState.JointLocations = new BodyJointLocation[jointCount];
         }
+
+        var result = OVRP_1_78_0.ovrp_GetBodyState(stepId, -1, out var bodyStateInternal);
+        if (result != Result.Success) return false;
+        if (bodyStateInternal.IsActive != Bool.True) return false;
+
+        bodyState.Confidence = bodyStateInternal.Confidence;
+        bodyState.SkeletonChangedCount = bodyStateInternal.SkeletonChangedCount;
+        bodyState.Time = bodyStateInternal.Time;
+        bodyState.JointLocations[0] = bodyStateInternal.JointLocation_0;
+        bodyState.JointLocations[1] = bodyStateInternal.JointLocation_1;
+        bodyState.JointLocations[2] = bodyStateInternal.JointLocation_2;
+        bodyState.JointLocations[3] = bodyStateInternal.JointLocation_3;
+        bodyState.JointLocations[4] = bodyStateInternal.JointLocation_4;
+        bodyState.JointLocations[5] = bodyStateInternal.JointLocation_5;
+        bodyState.JointLocations[6] = bodyStateInternal.JointLocation_6;
+        bodyState.JointLocations[7] = bodyStateInternal.JointLocation_7;
+        bodyState.JointLocations[8] = bodyStateInternal.JointLocation_8;
+        bodyState.JointLocations[9] = bodyStateInternal.JointLocation_9;
+        bodyState.JointLocations[10] = bodyStateInternal.JointLocation_10;
+        bodyState.JointLocations[11] = bodyStateInternal.JointLocation_11;
+        bodyState.JointLocations[12] = bodyStateInternal.JointLocation_12;
+        bodyState.JointLocations[13] = bodyStateInternal.JointLocation_13;
+        bodyState.JointLocations[14] = bodyStateInternal.JointLocation_14;
+        bodyState.JointLocations[15] = bodyStateInternal.JointLocation_15;
+        bodyState.JointLocations[16] = bodyStateInternal.JointLocation_16;
+        bodyState.JointLocations[17] = bodyStateInternal.JointLocation_17;
+        bodyState.JointLocations[18] = bodyStateInternal.JointLocation_18;
+        bodyState.JointLocations[19] = bodyStateInternal.JointLocation_19;
+        bodyState.JointLocations[20] = bodyStateInternal.JointLocation_20;
+        bodyState.JointLocations[21] = bodyStateInternal.JointLocation_21;
+        bodyState.JointLocations[22] = bodyStateInternal.JointLocation_22;
+        bodyState.JointLocations[23] = bodyStateInternal.JointLocation_23;
+        bodyState.JointLocations[24] = bodyStateInternal.JointLocation_24;
+        bodyState.JointLocations[25] = bodyStateInternal.JointLocation_25;
+        bodyState.JointLocations[26] = bodyStateInternal.JointLocation_26;
+        bodyState.JointLocations[27] = bodyStateInternal.JointLocation_27;
+        bodyState.JointLocations[28] = bodyStateInternal.JointLocation_28;
+        bodyState.JointLocations[29] = bodyStateInternal.JointLocation_29;
+        bodyState.JointLocations[30] = bodyStateInternal.JointLocation_30;
+        bodyState.JointLocations[31] = bodyStateInternal.JointLocation_31;
+        bodyState.JointLocations[32] = bodyStateInternal.JointLocation_32;
+        bodyState.JointLocations[33] = bodyStateInternal.JointLocation_33;
+        bodyState.JointLocations[34] = bodyStateInternal.JointLocation_34;
+        bodyState.JointLocations[35] = bodyStateInternal.JointLocation_35;
+        bodyState.JointLocations[36] = bodyStateInternal.JointLocation_36;
+        bodyState.JointLocations[37] = bodyStateInternal.JointLocation_37;
+        bodyState.JointLocations[38] = bodyStateInternal.JointLocation_38;
+        bodyState.JointLocations[39] = bodyStateInternal.JointLocation_39;
+        bodyState.JointLocations[40] = bodyStateInternal.JointLocation_40;
+        bodyState.JointLocations[41] = bodyStateInternal.JointLocation_41;
+        bodyState.JointLocations[42] = bodyStateInternal.JointLocation_42;
+        bodyState.JointLocations[43] = bodyStateInternal.JointLocation_43;
+        bodyState.JointLocations[44] = bodyStateInternal.JointLocation_44;
+        bodyState.JointLocations[45] = bodyStateInternal.JointLocation_45;
+        bodyState.JointLocations[46] = bodyStateInternal.JointLocation_46;
+        bodyState.JointLocations[47] = bodyStateInternal.JointLocation_47;
+        bodyState.JointLocations[48] = bodyStateInternal.JointLocation_48;
+        bodyState.JointLocations[49] = bodyStateInternal.JointLocation_49;
+        bodyState.JointLocations[50] = bodyStateInternal.JointLocation_50;
+        bodyState.JointLocations[51] = bodyStateInternal.JointLocation_51;
+        bodyState.JointLocations[52] = bodyStateInternal.JointLocation_52;
+        bodyState.JointLocations[53] = bodyStateInternal.JointLocation_53;
+        bodyState.JointLocations[54] = bodyStateInternal.JointLocation_54;
+        bodyState.JointLocations[55] = bodyStateInternal.JointLocation_55;
+        bodyState.JointLocations[56] = bodyStateInternal.JointLocation_56;
+        bodyState.JointLocations[57] = bodyStateInternal.JointLocation_57;
+        bodyState.JointLocations[58] = bodyStateInternal.JointLocation_58;
+        bodyState.JointLocations[59] = bodyStateInternal.JointLocation_59;
+        bodyState.JointLocations[60] = bodyStateInternal.JointLocation_60;
+        bodyState.JointLocations[61] = bodyStateInternal.JointLocation_61;
+        bodyState.JointLocations[62] = bodyStateInternal.JointLocation_62;
+        bodyState.JointLocations[63] = bodyStateInternal.JointLocation_63;
+        bodyState.JointLocations[64] = bodyStateInternal.JointLocation_64;
+        bodyState.JointLocations[65] = bodyStateInternal.JointLocation_65;
+        bodyState.JointLocations[66] = bodyStateInternal.JointLocation_66;
+        bodyState.JointLocations[67] = bodyStateInternal.JointLocation_67;
+        bodyState.JointLocations[68] = bodyStateInternal.JointLocation_68;
+        bodyState.JointLocations[69] = bodyStateInternal.JointLocation_69;
+
+        return true;
 #endif
     }
+
 
     public static bool GetMesh(MeshType meshType, out Mesh mesh)
     {
@@ -7808,7 +8109,7 @@ public static partial class OVRPlugin
     }
 
 
-// Virtual keyboard calls
+    // Virtual keyboard calls
 
     public static Result CreateVirtualKeyboard(VirtualKeyboardCreateInfo createInfo)
     {
@@ -8286,6 +8587,7 @@ public static partial class OVRPlugin
 #endif // OVRPLUGIN_UNSUPPORTED_PLATFORM
 
 
+
     public static bool StartBodyTracking() =>
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
         false;
@@ -8435,7 +8737,7 @@ public static partial class OVRPlugin
     public static UInt64 GetNativeOpenXRInstance()
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
-            return 0;
+        return 0;
 #else
         if (version >= OVRP_1_55_0.version)
         {
@@ -8453,7 +8755,7 @@ public static partial class OVRPlugin
     public static UInt64 GetNativeOpenXRSession()
     {
 #if OVRPLUGIN_UNSUPPORTED_PLATFORM
-            return 0;
+        return 0;
 #else
         if (version >= OVRP_1_55_0.version)
         {
@@ -9219,7 +9521,80 @@ public static partial class OVRPlugin
 
 
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TriangleMeshInternal
+    {
+        public int vertexCapacityInput;
+        public int vertexCountOutput;
+        public IntPtr vertices;
+        public int indexCapacityInput;
+        public int indexCountOutput;
+        public IntPtr indices;
+    }
 
+
+    public static bool GetSpaceTriangleMeshCounts(UInt64 space, out int vertexCount, out int triangleCount)
+    {
+        vertexCount = 0;
+        triangleCount = 0;
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version < OVRP_1_82_0.version) return false;
+
+        using (new OVRProfilerScope(nameof(GetSpaceTriangleMeshCounts)))
+        {
+            var triangleMeshInternal = default(TriangleMeshInternal);
+            var result = OVRP_1_82_0.ovrp_GetSpaceTriangleMesh(ref space, ref triangleMeshInternal);
+            vertexCount = triangleMeshInternal.vertexCountOutput;
+            triangleCount = triangleMeshInternal.indexCountOutput / 3;
+            return result == Result.Success;
+        }
+#endif
+    }
+
+    public static unsafe bool GetSpaceTriangleMesh(UInt64 space, NativeArray<Vector3> vertices,
+        NativeArray<int> triangles)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version < OVRP_1_82_0.version) return false;
+
+        using (new OVRProfilerScope(nameof(GetSpaceTriangleMesh)))
+        {
+            var triangleMeshInternal = new TriangleMeshInternal
+            {
+                vertices = new IntPtr(vertices.GetUnsafePtr()),
+                vertexCapacityInput = vertices.Length,
+                indices = new IntPtr(triangles.GetUnsafePtr()),
+                indexCapacityInput = triangles.Length,
+            };
+
+            return OVRP_1_82_0.ovrp_GetSpaceTriangleMesh(ref space, ref triangleMeshInternal) == Result.Success;
+        }
+#endif
+    }
+
+
+    [Flags]
+    public enum PassthroughPreferenceFields
+    {
+        Flags = 1 << 0
+    }
+
+    [Flags]
+    public enum PassthroughPreferenceFlags : long
+    {
+        DefaultToActive = 1 << 0
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PassthroughPreferences
+    {
+        public PassthroughPreferenceFields Fields;
+        public PassthroughPreferenceFlags Flags;
+    }
 
     public static bool GetLayerRecommendedResolution(int layerId, out Sizei recommendedSize)
     {
@@ -9659,6 +10034,33 @@ public static partial class OVRPlugin
 #endif
     }
 
+    internal static Result GetPassthroughPreferences(out PassthroughPreferences preferences)
+    {
+        preferences = default;
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return Result.Failure_Unsupported;
+#else
+        if (version < OVRP_1_87_0.version) return Result.Failure_NotYetImplemented;
+        return OVRP_1_87_0.ovrp_GetPassthroughPreferences(out preferences);
+#endif // OVRPLUGIN_UNSUPPORTED_PLATFORM
+    }
+
+    public static bool SetEyeBufferSharpenType(LayerSharpenType sharpenType)
+    {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+        return false;
+#else
+        if (version >= OVRP_1_87_0.version)
+        {
+            return OVRP_1_87_0.ovrp_SetEyeBufferSharpenType(sharpenType) == Result.Success;
+        }
+        else
+        {
+            return false;
+        }
+#endif // OVRPLUGIN_UNSUPPORTED_PLATFORM
+    }
+
     public static class Qpl
     {
         public const int DefaultInstanceKey = 0;
@@ -9785,6 +10187,7 @@ public static partial class OVRPlugin
         [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
         public static extern Posef ovrp_GetNodeVelocity(Node nodeId);
 
+        [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
         [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
         public static extern Posef ovrp_GetNodeAcceleration(Node nodeId);
     }
@@ -10071,6 +10474,7 @@ public static partial class OVRPlugin
         [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
         public static extern Posef ovrp_GetNodeVelocity2(int stateId, Node nodeId);
 
+        [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
         [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
         public static extern Posef ovrp_GetNodeAcceleration2(int stateId, Node nodeId);
     }
@@ -11289,12 +11693,18 @@ public static partial class OVRPlugin
 
 
 
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_GetSpaceTriangleMesh(ref UInt64 space,
+            ref TriangleMeshInternal triangleMeshInternal);
     }
 
     private static class OVRP_1_83_0
     {
         public static readonly System.Version version = new System.Version(1, 83, 0);
 
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_GetControllerState6(uint controllerMask, ref ControllerState6 controllerState);
 
         [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
         public static extern Result ovrp_GetVirtualKeyboardModelAnimationStates(
@@ -11355,8 +11765,53 @@ public static partial class OVRPlugin
 
 
 
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_SetControllerDrivenHandPoses(Bool controllerDrivenHandPoses);
 
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_IsControllerDrivenHandPosesEnabled(ref Bool enabled);
 
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_AreHandPosesGeneratedByControllerData(Step stepId, Node nodeId, ref Bool isGeneratedByControllerData);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_SetMultimodalHandsControllersSupported(Bool supported);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_IsMultimodalHandsControllersSupported(ref Bool supported);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_GetCurrentDetachedInteractionProfile(Hand hand,
+            out InteractionProfile interactionProfile);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_GetControllerIsInHand(Step stepId, Node nodeId, ref Bool isInHand);
+
+    }
+
+    private static class OVRP_1_87_0
+    {
+        public static readonly System.Version version = new System.Version(1, 87, 0);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_GetPassthroughPreferences(out PassthroughPreferences preferences);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_SetEyeBufferSharpenType(LayerSharpenType sharpenType);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_SetControllerDrivenHandPosesAreNatural(Bool controllerDrivenHandPosesAreNatural);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_AreControllerDrivenHandPosesNatural(ref Bool natural);
+    }
+
+    private static class OVRP_1_88_0
+    {
+        public static readonly System.Version version = new System.Version(1, 88, 0);
+
+        [DllImport(pluginName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Result ovrp_SetSimultaneousHandsAndControllersEnabled(Bool enabled);
     }
     /* INSERT NEW OVRP CLASS ABOVE THIS LINE */
     // After modify this file, run `fbpython arvr/projects/integrations/codegen/generate_mockovrplugin.py` to update OculusInternal/Tests/MockOVRPlugin.cs

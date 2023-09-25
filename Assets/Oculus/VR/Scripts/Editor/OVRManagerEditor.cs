@@ -27,6 +27,7 @@ public class OVRManagerEditor : Editor
     private SerializedProperty _requestBodyTrackingPermissionOnStartup;
     private SerializedProperty _requestFaceTrackingPermissionOnStartup;
     private SerializedProperty _requestEyeTrackingPermissionOnStartup;
+    private SerializedProperty _requestScenePermissionOnStartup;
     private bool _expandPermissionsRequest;
 
     void OnEnable()
@@ -37,6 +38,8 @@ public class OVRManagerEditor : Editor
             serializedObject.FindProperty(nameof(OVRManager.requestFaceTrackingPermissionOnStartup));
         _requestEyeTrackingPermissionOnStartup =
             serializedObject.FindProperty(nameof(OVRManager.requestEyeTrackingPermissionOnStartup));
+        _requestScenePermissionOnStartup =
+            serializedObject.FindProperty(nameof(OVRManager.requestScenePermissionOnStartup));
     }
 
     public override void OnInspectorGUI()
@@ -136,6 +139,35 @@ public class OVRManagerEditor : Editor
         EditorGUILayout.EndFoldoutHeaderGroup();
 #endif
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
+        // Multimodal hands and controllers section
+#if UNITY_ANDROID
+        bool launchMultimodalHandsControllersOnStartup =
+            projectConfig.multimodalHandsControllersSupport != OVRProjectConfig.MultimodalHandsControllersSupport.Disabled;
+        EditorGUI.BeginDisabledGroup(!launchMultimodalHandsControllersOnStartup);
+        GUIContent enableConcurrentHandsAndControllersOnStartup = new GUIContent("Launch concurrent hands and controllers mode on startup",
+            "Launches concurrent hands and controllers on startup for the scene. Concurrent Hands and Controllers Capability must be enabled in the project settings.");
+#else
+        GUIContent enableConcurrentHandsAndControllersOnStartup = new GUIContent("Enable concurrent hands and controllers mode on startup",
+            "Launches concurrent hands and controllers on startup for the scene.");
+#endif
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Concurrent hands and controllers", EditorStyles.boldLabel);
+#if UNITY_ANDROID
+        if (!launchMultimodalHandsControllersOnStartup)
+        {
+            EditorGUILayout.LabelField(
+                "Requires Concurrent Hands and Controllers Capability to be enabled in the General section of the Quest features.",
+                EditorStyles.wordWrappedLabel);
+        }
+#endif
+        OVREditorUtil.SetupBoolField(target, enableConcurrentHandsAndControllersOnStartup,
+            ref manager.launchMultimodalHandsControllersOnStartup,
+            ref modified);
+#if UNITY_ANDROID
+        EditorGUI.EndDisabledGroup();
+#endif
+#endif
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
         // Insight Passthrough section
@@ -164,6 +196,7 @@ public class OVRManagerEditor : Editor
 #if UNITY_ANDROID
         EditorGUI.EndDisabledGroup();
 #endif
+
 #endif
 
         #region PermissionRequests
@@ -196,6 +229,8 @@ public class OVRManagerEditor : Editor
                 "Face Tracking", _requestFaceTrackingPermissionOnStartup);
             AddPermissionGroup(projectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.None, "Eye Tracking",
                 _requestEyeTrackingPermissionOnStartup);
+            AddPermissionGroup(projectConfig.sceneSupport != OVRProjectConfig.FeatureSupport.None, "Scene",
+                _requestScenePermissionOnStartup);
         }
 
         EditorGUILayout.EndFoldoutHeaderGroup();
@@ -209,5 +244,19 @@ public class OVRManagerEditor : Editor
         }
 
         serializedObject.ApplyModifiedProperties();
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
+#if !OCULUS_XR_3_3_0_OR_NEWER || UNITY_2020
+        if (manager.enableDynamicResolution && !PlayerSettings.GetUseDefaultGraphicsAPIs(BuildTarget.Android))
+        {
+            UnityEngine.Rendering.GraphicsDeviceType[] apis = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
+            if (apis.Length >= 1 && apis[0] == UnityEngine.Rendering.GraphicsDeviceType.Vulkan)
+            {
+                Debug.LogError("Vulkan Dynamic Resolution is not supported on your current build version. Ensure you are on Unity 2021+ with Oculus XR plugin v3.3.0+");
+                manager.enableDynamicResolution = false;
+            }
+        }
+#endif
+#endif
     }
 }

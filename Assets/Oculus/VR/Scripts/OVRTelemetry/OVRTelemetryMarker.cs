@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -66,7 +66,7 @@ internal struct OVRTelemetryMarker : IDisposable
     {
         MarkerId = markerId;
         InstanceKey = instanceKey;
-        _client = OVRTelemetry.Client;
+        _client = client;
         State = new OVRTelemetryMarkerState(false, OVRPlugin.Qpl.ResultType.Success);
 
         _client.MarkerStart(markerId, instanceKey, timestampMs);
@@ -86,8 +86,20 @@ internal struct OVRTelemetryMarker : IDisposable
 
     public OVRTelemetryMarker Send()
     {
+
         State = new OVRTelemetryMarkerState(true, Result);
         _client.MarkerEnd(MarkerId, Result, InstanceKey);
+        return this;
+    }
+
+    public OVRTelemetryMarker SendIf(bool condition)
+    {
+        if (condition)
+        {
+            return Send();
+        }
+
+        State = new OVRTelemetryMarkerState(true, Result);
         return this;
     }
 

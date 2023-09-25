@@ -81,6 +81,35 @@ public class OVRCameraRig : MonoBehaviour
     /// </summary>
     public Transform rightHandAnchor { get; private set; }
 
+    /// <summary>
+    /// Coincides with the pose of the left input device if it is detached.
+    /// </summary>
+    public Transform leftHandAnchorDetached { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left input device if it is detached.
+    /// </summary>
+    public Transform rightHandAnchorDetached { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left controller when it is in a hand
+    /// </summary>
+    public Transform leftControllerInHandAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left hand when it is on a controller
+    /// </summary>
+    public Transform leftHandOnControllerAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the right controller when it is in a hand
+    /// </summary>
+    public Transform rightControllerInHandAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the right hand when it is on a controller
+    /// </summary>
+    public Transform rightHandOnControllerAnchor { get; private set; }
 
     /// <summary>
     /// Anchors controller pose to fix offset issues for the left hand.
@@ -140,6 +169,12 @@ public class OVRCameraRig : MonoBehaviour
     protected readonly string rightHandAnchorName = "RightHandAnchor";
     protected readonly string leftControllerAnchorName = "LeftControllerAnchor";
     protected readonly string rightControllerAnchorName = "RightControllerAnchor";
+    protected readonly string leftHandAnchorDetachedName = "LeftHandAnchorDetached";
+    protected readonly string rightHandAnchorDetachedName = "RightHandAnchorDetached";
+    protected readonly string leftControllerInHandAnchorName = "LeftControllerInHandAnchor";
+    protected readonly string leftHandOnControllerAnchorName = "LeftHandOnControllerAnchor";
+    protected readonly string rightControllerInHandAnchorName = "RightControllerInHandAnchor";
+    protected readonly string rightHandOnControllerAnchorName = "RightHandOnControllerAnchor";
     protected Camera _centerEyeCamera;
     protected Camera _leftEyeCamera;
     protected Camera _rightEyeCamera;
@@ -298,14 +333,103 @@ public class OVRCameraRig : MonoBehaviour
             }
             else
             {
-                OVRInput.Controller leftActiveController = OVRInput.GetActiveControllerForHand(OVRInput.Handedness.LeftHanded);
-                OVRInput.Controller rightActiveController = OVRInput.GetActiveControllerForHand(OVRInput.Handedness.RightHanded);
+                OVRInput.Controller leftActiveController =
+                    OVRInput.GetActiveControllerForHand(OVRInput.Handedness.LeftHanded);
+                OVRInput.Controller rightActiveController =
+                    OVRInput.GetActiveControllerForHand(OVRInput.Handedness.RightHanded);
+
+                // it's possible for niether hands or controllers to be active, in that case
+                // manually calculate which one we care about giving hands priority.
+                if (leftActiveController == OVRInput.Controller.None)
+                {
+                    if (OVRInput.GetControllerPositionValid(OVRInput.Controller.LHand))
+                    {
+                        leftActiveController = OVRInput.Controller.LHand;
+                    }
+                    else if (OVRInput.GetControllerPositionValid(OVRInput.Controller.LTouch))
+                    {
+                        leftActiveController = OVRInput.Controller.LTouch;
+                    }
+                }
+                if (rightActiveController == OVRInput.Controller.None)
+                {
+                    if (OVRInput.GetControllerPositionValid(OVRInput.Controller.RHand))
+                    {
+                        rightActiveController = OVRInput.Controller.RHand;
+                    }
+                    else if (OVRInput.GetControllerPositionValid(OVRInput.Controller.RTouch))
+                    {
+                        rightActiveController = OVRInput.Controller.RTouch;
+                    }
+                }
 
                 leftHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(leftActiveController);
                 rightHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(rightActiveController);
                 leftHandAnchor.localRotation = OVRInput.GetLocalControllerRotation(leftActiveController);
                 rightHandAnchor.localRotation = OVRInput.GetLocalControllerRotation(rightActiveController);
 
+                // left
+                OVRInput.ControllerInHandState controllerInHandState =
+                    OVRInput.GetControllerIsInHandState(OVRInput.Hand.HandLeft);
+                if (controllerInHandState == OVRInput.ControllerInHandState.ControllerNotInHand)
+                {
+                    leftHandAnchorDetached.localPosition =
+                        OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch);
+                    leftHandAnchorDetached.localRotation =
+                        OVRInput.GetLocalControllerRotation(OVRInput.Controller.LTouch);
+                    leftHandOnControllerAnchor.localPosition = Vector3.zero;
+                    leftHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
+                else if (controllerInHandState == OVRInput.ControllerInHandState.ControllerInHand)
+                {
+                    Vector3 leftRelativeHandPosition =
+                        trackingSpace.TransformPoint(OVRInput.GetLocalControllerPosition(OVRInput.Controller.LHand));
+                    leftHandOnControllerAnchor.localPosition =
+                        leftHandAnchor.InverseTransformPoint(leftRelativeHandPosition);
+                    leftHandOnControllerAnchor.localRotation = Quaternion.Inverse(leftHandAnchor.localRotation) *
+                                                               OVRInput.GetLocalControllerRotation(OVRInput.Controller
+                                                                   .LHand);
+                    leftHandAnchorDetached.localPosition = Vector3.zero;
+                    leftHandAnchorDetached.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    leftHandAnchorDetached.localPosition = Vector3.zero;
+                    leftHandAnchorDetached.localRotation = Quaternion.identity;
+                    leftHandOnControllerAnchor.localPosition = Vector3.zero;
+                    leftHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
+
+                // right
+                controllerInHandState = OVRInput.GetControllerIsInHandState(OVRInput.Hand.HandRight);
+                if (controllerInHandState == OVRInput.ControllerInHandState.ControllerNotInHand)
+                {
+                    rightHandAnchorDetached.localPosition =
+                        OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
+                    rightHandAnchorDetached.localRotation =
+                        OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
+                    rightHandOnControllerAnchor.localPosition = Vector3.zero;
+                    rightHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
+                else if (controllerInHandState == OVRInput.ControllerInHandState.ControllerInHand)
+                {
+                    Vector3 rightRelativeHandPosition =
+                        trackingSpace.TransformPoint(OVRInput.GetLocalControllerPosition(OVRInput.Controller.RHand));
+                    rightHandOnControllerAnchor.localPosition =
+                        rightHandAnchor.InverseTransformPoint(rightRelativeHandPosition);
+                    rightHandOnControllerAnchor.localRotation = Quaternion.Inverse(rightHandAnchor.localRotation) *
+                                                                OVRInput.GetLocalControllerRotation(OVRInput.Controller
+                                                                    .RHand);
+                    rightHandAnchorDetached.localPosition = Vector3.zero;
+                    rightHandAnchorDetached.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    rightHandAnchorDetached.localPosition = Vector3.zero;
+                    rightHandAnchorDetached.localRotation = Quaternion.identity;
+                    rightHandOnControllerAnchor.localPosition = Vector3.zero;
+                    rightHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
             }
 
             trackerAnchor.localPosition = tracker.position;
@@ -424,7 +548,23 @@ public class OVRCameraRig : MonoBehaviour
         if (rightHandAnchor == null)
             rightHandAnchor = ConfigureAnchor(trackingSpace, rightHandAnchorName);
 
+        if (leftHandAnchorDetached == null)
+            leftHandAnchorDetached = ConfigureAnchor(trackingSpace, leftHandAnchorDetachedName);
 
+        if (rightHandAnchorDetached == null)
+            rightHandAnchorDetached = ConfigureAnchor(trackingSpace, rightHandAnchorDetachedName);
+
+        if (leftControllerInHandAnchor == null)
+            leftControllerInHandAnchor = ConfigureAnchor(leftHandAnchor, leftControllerInHandAnchorName);
+
+        if (leftHandOnControllerAnchor == null)
+            leftHandOnControllerAnchor = ConfigureAnchor(leftControllerInHandAnchor, leftHandOnControllerAnchorName);
+
+        if (rightControllerInHandAnchor == null)
+            rightControllerInHandAnchor = ConfigureAnchor(rightHandAnchor, rightControllerInHandAnchorName);
+
+        if (rightHandOnControllerAnchor == null)
+            rightHandOnControllerAnchor = ConfigureAnchor(rightControllerInHandAnchor, rightHandOnControllerAnchorName);
 
         if (trackerAnchor == null)
             trackerAnchor = ConfigureAnchor(trackingSpace, trackerAnchorName);

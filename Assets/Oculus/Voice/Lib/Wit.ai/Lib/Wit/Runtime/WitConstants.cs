@@ -11,8 +11,8 @@ namespace Meta.WitAi
     public static class WitConstants
     {
         // Wit service version info
-        public const string API_VERSION = "20230313";
-        public const string SDK_VERSION = "54.0.0";
+        public const string API_VERSION = "20230513";
+        public const string SDK_VERSION = "56.0.0";
         public const string CLIENT_NAME = "wit-unity";
 
         // Wit service endpoint info
@@ -23,7 +23,6 @@ namespace Meta.WitAi
         public const string HEADER_REQUEST_ID = "X-Wit-Client-Request-Id";
         public const string HEADER_AUTH = "Authorization";
         public const string HEADER_USERAGENT = "User-Agent";
-        public const string HEADER_USERAGENT_PREFIX = "voice-sdk-54.0.0.135.284,";
         public const string HEADER_USERAGENT_CONFID_MISSING = "not-yet-configured";
         public const string HEADER_POST_CONTENT = "Content-Type";
         public const string HEADER_GET_CONTENT = "Accept";
@@ -46,6 +45,7 @@ namespace Meta.WitAi
         public const float ENDPOINT_TTS_STREAM_READY_DURATION = 0.1f; // In Seconds
         public const int ENDPOINT_TTS_TIMEOUT = 10000; // In ms
         public const int ENDPOINT_TTS_MAX_TEXT_LENGTH = 280;
+        public const string ERROR_TTS_CACHE_DOWNLOAD = "File is not Preloaded";
 
         // Dictation Endpoint
         public const string ENDPOINT_DICTATION = "dictation";

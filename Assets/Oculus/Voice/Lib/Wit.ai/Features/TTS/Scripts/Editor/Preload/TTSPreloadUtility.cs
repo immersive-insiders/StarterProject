@@ -12,14 +12,13 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using Meta.WitAi;
 using Meta.WitAi.TTS.Data;
 using Meta.WitAi.Data.Configuration;
 using Meta.WitAi.Json;
 using Meta.WitAi.TTS.Utilities;
 using UnityEngine.SceneManagement;
 
-namespace Meta.WitAi.TTS.Editor.Preload
+namespace Meta.WitAi.TTS.Preload
 {
     public static class TTSPreloadUtility
     {
@@ -248,7 +247,7 @@ namespace Meta.WitAi.TTS.Editor.Preload
                 // Failed
                 if (!phraseData.downloaded)
                 {
-                    log += $"\n-{voiceSettings.settingsID} Preload Failed: {phraseData.textToSpeak}";
+                    log += $"\n-{voiceSettings.SettingsId} Preload Failed: {phraseData.textToSpeak}";
                 }
                 // Next
                 running = false;
@@ -257,7 +256,7 @@ namespace Meta.WitAi.TTS.Editor.Preload
             // Wait for running to complete
             while (running)
             {
-                //Debug.Log($"Preload Wait: {voiceSettings.settingsID} - {phraseData.textToSpeak}");
+                //Debug.Log($"Preload Wait: {voiceSettings.SettingsId} - {phraseData.textToSpeak}");
                 yield return null;
             }
 
@@ -481,8 +480,8 @@ namespace Meta.WitAi.TTS.Editor.Preload
             foreach (var phraseProvider in phraseProviders)
             {
                 // Ignore if no voices are found
-                string[] voiceIds = phraseProvider.GetVoiceIds();
-                if (voiceIds == null || voiceIds.Length == 0)
+                List<string> voiceIds = phraseProvider.GetVoiceIds();
+                if (voiceIds == null || voiceIds.Count == 0)
                 {
                     continue;
                 }
@@ -497,8 +496,8 @@ namespace Meta.WitAi.TTS.Editor.Preload
                     }
 
                     // Ignore if phrases are null
-                    string[] phrases = phraseProvider.GetVoicePhrases(voiceId);
-                    if (phrases == null || phrases.Length == 0)
+                    List<string> phrases = phraseProvider.GetVoicePhrases(voiceId);
+                    if (phrases == null || phrases.Count == 0)
                     {
                         continue;
                     }

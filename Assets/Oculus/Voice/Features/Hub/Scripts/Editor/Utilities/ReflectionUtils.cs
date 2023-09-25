@@ -16,18 +16,32 @@ namespace Meta.Voice.Hub.Utilities
     {
         private const string NAMESPACE_PREFIX = "Meta";
 
-        internal static bool IsValidNamespace(Type type) =>
+        private static bool IsValidNamespace(Type type) =>
             type.Namespace != null && type.Namespace.StartsWith(NAMESPACE_PREFIX);
+
+        private static List<Type> GetTypes<T>(Func<Type, bool> isValid)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly =>
+                {
+                    try
+                    {
+                        return assembly.GetTypes();
+                    }
+                    catch
+                    {
+                        return new Type[]{};
+                    }
+                })
+                .Where(IsValidNamespace)
+                .Where(isValid)
+                .ToList();
+        }
 
         internal static List<Type> GetTypesWithAttribute<T>() where T : Attribute
         {
             var attributeType = typeof(T);
-
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(assembly => assembly.GetTypes())
-                .Where(type => IsValidNamespace(type))
-                .Where(type => type.GetCustomAttributes(attributeType, false).Length > 0)
-                .ToList();
+            return GetTypes<T>(type => type.GetCustomAttributes(attributeType, false).Length > 0);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -23,6 +23,9 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
+/// <summary>
+/// Passthrough Color Look-Up Tables (LUTs).
+/// </summary>
 public class OVRPassthroughColorLut : System.IDisposable
 {
     private const int RecomendedBatchSize = 128;
@@ -219,10 +222,15 @@ public class OVRPassthroughColorLut : System.IDisposable
         var passthroughCapabilities = OVRManager.GetPassthroughCapabilities();
         if (passthroughCapabilities != null)
         {
+            if (passthroughCapabilities.MaxColorLutResolution == 0)
+            {
+                throw new System.Exception($"Passthrough Color LUTs are not supported.");
+            }
+
             if (Resolution > passthroughCapabilities.MaxColorLutResolution)
             {
                 throw new System.Exception(
-                    $"Color LUT resolution {Resolution} exceeds the maximum of {passthroughCapabilities.MaxColorLutResolution}");
+                    $"Color LUT resolution {Resolution} exceeds the maximum of {passthroughCapabilities.MaxColorLutResolution}.");
             }
         }
         else

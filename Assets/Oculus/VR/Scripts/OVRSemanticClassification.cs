@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -33,6 +33,7 @@ using UnityEngine;
 [RequireComponent(typeof(OVRSceneAnchor))]
 public class OVRSemanticClassification : MonoBehaviour, IOVRSceneComponent
 {
+    public const char LabelSeparator = ',';
     private readonly List<string> _labels = new List<string>();
 
     /// <summary>
@@ -75,26 +76,34 @@ public class OVRSemanticClassification : MonoBehaviour, IOVRSceneComponent
         if (OVRPlugin.GetSpaceSemanticLabels(GetComponent<OVRSceneAnchor>().Space, out var labels))
         {
             _labels.Clear();
-            _labels.AddRange(ValidateAndUpgradeLabels(labels).Split(','));
+            _labels.AddRange(ValidateAndUpgradeLabels(labels).Split(LabelSeparator));
+
+            OVRSceneManager.Development.Log(nameof(OVRSemanticClassification),
+                $"[{GetComponent<OVRSceneAnchor>().Uuid}] {nameof(OVRSceneAnchor)} has labels: {labels}.",
+                gameObject);
         }
         else
         {
             OVRSceneManager.Development.LogWarning(nameof(OVRSemanticClassification),
-                $"[{GetComponent<OVRSceneAnchor>().Uuid}] {nameof(OVRSceneAnchor)} has no semantic labels.");
+                $"[{GetComponent<OVRSceneAnchor>().Uuid}] {nameof(OVRSceneAnchor)} has no semantic labels.",
+                gameObject);
         }
     }
 
     /// <summary>
     /// Checks labels to ensure that we've accounted for upgraded labels,
     /// such as all Table labels also including Desk.
+    /// All InvisibleWallFace labels also include WallFace.
     /// </summary>
     internal static string ValidateAndUpgradeLabels(string labels)
     {
         using (new OVRObjectPool.ListScope<string>(out var newLabels))
         {
-            var splitLabels = labels.Split(',');
+            var splitLabels = labels.Split(LabelSeparator);
             var hasTable = false;
             var hasDesk = false;
+            var hasInvisibleWallFace = false;
+            var hasWallFace = false;
 
 #pragma warning disable CS0618 // Type or member is obsolete
             // OpenXR will only return TABLE, but we support DESK as it's
@@ -107,6 +116,10 @@ public class OVRSemanticClassification : MonoBehaviour, IOVRSceneComponent
                     hasTable = true;
                 else if (label == OVRSceneManager.Classification.Desk)
                     hasDesk = true;
+                else if (label == OVRSceneManager.Classification.InvisibleWallFace)
+                    hasInvisibleWallFace = true;
+                else if (label == OVRSceneManager.Classification.WallFace)
+                    hasWallFace = true;
             }
 
             if (hasTable && !hasDesk)
@@ -115,7 +128,10 @@ public class OVRSemanticClassification : MonoBehaviour, IOVRSceneComponent
                 newLabels.Add(OVRSceneManager.Classification.Table);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            return string.Join(",", newLabels);
+            if (hasInvisibleWallFace && !hasWallFace)
+                newLabels.Add(OVRSceneManager.Classification.WallFace);
+
+            return string.Join(LabelSeparator.ToString(), newLabels);
         }
     }
 }

@@ -171,8 +171,10 @@ public class OVRControllerTest : MonoBehaviour
         Vector3 angVel = OVRInput.GetLocalControllerAngularVelocity(activeController);
         data.AppendFormat("AngVel: ({0:F2}, {1:F2}, {2:F2})\n", angVel.x, angVel.y, angVel.z);
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Vector3 angAcc = OVRInput.GetLocalControllerAngularAcceleration(activeController);
         data.AppendFormat("AngAcc: ({0:F2}, {1:F2}, {2:F2})\n", angAcc.x, angAcc.y, angAcc.z);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         Vector3 pos = OVRInput.GetLocalControllerPosition(activeController);
         data.AppendFormat("Position: ({0:F2}, {1:F2}, {2:F2})\n", pos.x, pos.y, pos.z);
@@ -180,8 +182,10 @@ public class OVRControllerTest : MonoBehaviour
         Vector3 vel = OVRInput.GetLocalControllerVelocity(activeController);
         data.AppendFormat("Vel: ({0:F2}, {1:F2}, {2:F2})\n", vel.x, vel.y, vel.z);
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Vector3 acc = OVRInput.GetLocalControllerAcceleration(activeController);
         data.AppendFormat("Acc: ({0:F2}, {1:F2}, {2:F2})\n", acc.x, acc.y, acc.z);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         float indexTrigger = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger);
         data.AppendFormat("PrimaryIndexTriggerAxis1D: ({0:F2})\n", indexTrigger);

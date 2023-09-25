@@ -19,7 +19,7 @@ GameObject:
   m_IsActive: 1
 --- !u!4 &2563431155123992766
 Transform:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 8
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -43,10 +43,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09cced76cc649e444abf5f01db84a585, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TextCommitField: {fileID: 0}
-  InputHandlers: []
-  keyboardRootTransform: {fileID: 2563431155123992766}
-  InputMode: 0
+  InitialPosition: 1
+  textCommitField: {fileID: 0}
+  leftControllerRootTransform: {fileID: 0}
+  leftControllerDirectTransform: {fileID: 0}
+  rightControllerRootTransform: {fileID: 0}
+  rightControllerDirectTransform: {fileID: 0}
+  controllerDirectInteraction: 1
+  controllerRayInteraction: 1
+  controllerRaycaster: {fileID: 0}
+  handLeft: {fileID: 0}
+  handRight: {fileID: 0}
+  handDirectInteraction: 1
+  handRayInteraction: 1
+  handRaycaster: {fileID: 0}
   keyboardModelShader: {fileID: 10755, guid: 0000000000000000f000000000000000, type: 0}
   keyboardModelAlphaBlendShader: {fileID: 10750, guid: 0000000000000000f000000000000000,
     type: 0}

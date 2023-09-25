@@ -55,9 +55,18 @@ public class OVRHand : MonoBehaviour,
     [SerializeField]
     private Hand HandType = Hand.None;
 
+    internal void SetHandType(Hand type)
+    {
+        HandType = type;
+    }
+
     [SerializeField]
     private Transform _pointerPoseRoot = null;
 
+    /// <summary>
+    /// Determines if the controller should be hidden based on held state.
+    /// </summary>
+    public OVRInput.InputDeviceShowState m_showState = OVRInput.InputDeviceShowState.ControllerNotInHand;
 
     private GameObject _pointerPoseGO;
     private OVRPlugin.HandState _handState = new OVRPlugin.HandState();
@@ -114,6 +123,47 @@ public class OVRHand : MonoBehaviour,
             IsDataValid = true;
             IsDataHighConfidence = IsTracked && HandConfidence == TrackingConfidence.High;
 
+            // Hands cannot be doing pointer poses or system gestures when they are holding controllers
+            //OVRInput.Hand inputHandType = (HandType == Hand.)
+            OVRInput.ControllerInHandState controllerInHandState =
+                OVRInput.GetControllerIsInHandState((OVRInput.Hand)HandType);
+            if (controllerInHandState == OVRInput.ControllerInHandState.ControllerInHand)
+            {
+                // This hand is holding a controller
+                IsSystemGestureInProgress = false;
+                IsPointerPoseValid = false;
+            }
+
+            switch (m_showState)
+            {
+                case OVRInput.InputDeviceShowState.Always:
+                    // intentionally blank
+                    break;
+                case OVRInput.InputDeviceShowState.ControllerInHandOrNoHand:
+                    if (controllerInHandState == OVRInput.ControllerInHandState.ControllerNotInHand)
+                    {
+                        IsDataValid = false;
+                    }
+                    break;
+                case OVRInput.InputDeviceShowState.ControllerInHand:
+                    if (controllerInHandState != OVRInput.ControllerInHandState.ControllerInHand)
+                    {
+                        IsDataValid = false;
+                    }
+                    break;
+                case OVRInput.InputDeviceShowState.ControllerNotInHand:
+                    if (controllerInHandState != OVRInput.ControllerInHandState.ControllerNotInHand)
+                    {
+                        IsDataValid = false;
+                    }
+                    break;
+                case OVRInput.InputDeviceShowState.NoHand:
+                    if (controllerInHandState != OVRInput.ControllerInHandState.NoHand)
+                    {
+                        IsDataValid = false;
+                    }
+                    break;
+            }
         }
         else
         {

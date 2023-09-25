@@ -444,7 +444,7 @@ namespace Meta.WitAi
                     StatusCode = WitConstants.ERROR_CODE_GENERAL;
                     StatusDescription = $"Request canceled prior to start";
                 }
-                HandleNlpResponse(null, StatusDescription);
+                HandleFinalNlpResponse(null, StatusDescription);
                 return;
             }
             var asyncResult = _request.BeginGetResponse(HandleResponse, _request);
@@ -462,7 +462,6 @@ namespace Meta.WitAi
 
             // No longer active
             StatusCode = WitConstants.ERROR_CODE_TIMEOUT;
-            StatusDescription = $"Request timed out after {(DateTime.UtcNow - _requestStartTime).Seconds:0.00} seconds";
 
             // Clean up the current request if it is still going
             if (null != _request)
@@ -474,7 +473,25 @@ namespace Meta.WitAi
             CloseActiveStream();
 
             // Complete
-            MainThreadCallback(() => HandleNlpResponse(null, StatusDescription));
+            MainThreadCallback(() =>
+            {
+                string path = "";
+                if (null != _request?.RequestUri?.PathAndQuery)
+                {
+                    var uriSections = _request.RequestUri.PathAndQuery.Split(new char[] { '?' });
+                    path = uriSections[0];
+                }
+
+                // TODO: T153403776 There are still problems with this logic. We're not properly propigating down if
+                // this was a cancellation due to user request or actual timeout.
+                var time = (DateTime.UtcNow - _requestStartTime);
+                if (time.Seconds > Timeout)
+                {
+                    StatusDescription = $"Request [{path}] timed out after {time.Seconds:0.00} seconds";
+                }
+
+                HandleFinalNlpResponse(null, StatusDescription);
+            });
         }
 
         // Write stream
@@ -526,7 +543,7 @@ namespace Meta.WitAi
                 StatusCode = (int) e.Status;
                 StatusDescription = e.Message;
                 VLog.W(e);
-                MainThreadCallback(() => HandleNlpResponse(null, StatusDescription));
+                MainThreadCallback(() => HandleFinalNlpResponse(null, StatusDescription));
             }
             catch (Exception e)
             {
@@ -541,7 +558,7 @@ namespace Meta.WitAi
                 StatusCode = WitConstants.ERROR_CODE_GENERAL;
                 StatusDescription = e.Message;
                 VLog.W(e);
-                MainThreadCallback(() => HandleNlpResponse(null, StatusDescription));
+                MainThreadCallback(() => HandleFinalNlpResponse(null, StatusDescription));
             }
         }
 
@@ -734,13 +751,7 @@ namespace Meta.WitAi
 
             MainThreadCallback(() =>
             {
-                // Send partial data if not previously sent
-                if (!_lastResponseData.HasResponse())
-                {
-                    ResponseData = _lastResponseData;
-                }
-
-                // Apply error if needed
+                // Append error if needed
                 if (null != _lastResponseData)
                 {
                     var error = _lastResponseData["error"];
@@ -751,7 +762,7 @@ namespace Meta.WitAi
                 }
 
                 // Call completion delegate
-                HandleNlpResponse(_lastResponseData, StatusCode == (int)HttpStatusCode.OK ? string.Empty : $"{StatusDescription}\n\nStackTrace:\n{_stackTrace}\n\n");
+                HandleFinalNlpResponse(_lastResponseData, StatusCode == (int)HttpStatusCode.OK ? string.Empty : $"{StatusDescription}\n\nStackTrace:\n{_stackTrace}\n\n");
             });
         }
         // Check status
@@ -855,7 +866,7 @@ namespace Meta.WitAi
                 // Set response
                 if (hasResponse)
                 {
-                    ResponseData = responseNode;
+                    HandlePartialNlpResponse(responseNode);
                 }
             });
         }
@@ -873,10 +884,15 @@ namespace Meta.WitAi
             base.OnTranscriptionChanged();
         }
         // On response data change callback
-        protected override void OnResponseDataChanged()
+        protected override void OnPartialResponse()
         {
             onPartialResponse?.Invoke(this);
-            base.OnResponseDataChanged();
+            base.OnPartialResponse();
+        }
+        // On full response
+        protected override void OnFullResponse()
+        {
+            base.OnFullResponse();
         }
         // Check if data has been written to post stream while still receiving data
         private bool WaitingForPost()

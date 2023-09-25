@@ -19,6 +19,9 @@
  */
 
 using System;
+using System.Collections.Generic;
+using Oculus.Interaction.PoseDetection.Debug;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -264,6 +267,22 @@ namespace Oculus.Interaction.PoseDetection
         #endregion
 
         public bool Active { get; private set;  }
+
+        static Sequence()
+        {
+            ActiveStateDebugTree.RegisterModel<Sequence, DebugModel>();
+        }
+
+        private class DebugModel : ActiveStateModel<Sequence>
+        {
+            protected override IEnumerable<IActiveState> GetChildren(Sequence activeState)
+            {
+                List<IActiveState> children = new List<IActiveState>();
+                children.AddRange(activeState._stepsToActivate.Select(step => step.ActiveState));
+                children.Add(activeState.RemainActiveWhile);
+                return children.Where(c => c != null);
+            }
+        }
 
         #region Inject
 

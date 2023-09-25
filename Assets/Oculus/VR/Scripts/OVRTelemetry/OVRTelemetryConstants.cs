@@ -27,6 +27,19 @@ internal static class OVRTelemetryConstants
         public static class MarkerId
         {
             public const int Init = 163069401;
+            public const int Consent = 163056770;
+        }
+
+        public static class AnnotationTypes
+        {
+            public const string Origin = "Origin";
+        }
+
+        public enum ConsentOrigins
+        {
+            Popup,
+            Settings,
+            Legacy
         }
 
         public static readonly MarkerPoint InitializeInsightPassthrough =
@@ -50,5 +63,22 @@ internal static class OVRTelemetryConstants
     public static class Editor
     {
         public const int Start = 163067235;
+    }
+
+    public static class SBB
+    {
+        public static class MarkerId
+        {
+            public const int OpenWindow = 163062905;
+            public const int AddBlock = 163060420;
+            public const int RunBlock = 163063912;
+            public const int InstallSDK = 163067801;
+            public const int RemoveSDK = 163067560;
+        }
+
+        public static class AnnotationType
+        {
+            public const string BlockId = "BlockId";
+        }
     }
 }

@@ -38,13 +38,14 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
         Quest = 1,
         Quest2 = 2,
         QuestPro = 3,
+        Quest3 = 4
     }
 
     public enum HandTrackingSupport
     {
         ControllersOnly = 0,
         ControllersAndHands = 1,
-        HandsOnly = 2,
+        HandsOnly = 2
     }
 
     public enum HandTrackingFrequency
@@ -61,6 +62,11 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
         V2 = 2
     }
 
+    public enum MultimodalHandsControllersSupport
+    {
+        Disabled = 0,
+        Enabled = 1,
+    }
 
     public enum AnchorSupport
     {
@@ -95,6 +101,9 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
     public HandTrackingSupport handTrackingSupport = HandTrackingSupport.ControllersOnly;
     public HandTrackingFrequency handTrackingFrequency = HandTrackingFrequency.LOW;
     public HandTrackingVersion handTrackingVersion = HandTrackingVersion.Default;
+    public MultimodalHandsControllersSupport multimodalHandsControllersSupport =
+        MultimodalHandsControllersSupport.Disabled;
+
     [FormerlySerializedAs("spatialAnchorsSupport")]
     public AnchorSupport anchorSupport = AnchorSupport.Disabled;
 
@@ -105,6 +114,7 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
     public FeatureSupport faceTrackingSupport = FeatureSupport.None;
     public FeatureSupport eyeTrackingSupport = FeatureSupport.None;
     public FeatureSupport virtualKeyboardSupport = FeatureSupport.None;
+    public FeatureSupport sceneSupport = FeatureSupport.None;
 
     public bool disableBackups = true;
     public bool enableNSCConfig = true;
@@ -130,7 +140,14 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
     [SerializeField]
     internal FeatureSupport _insightPassthroughSupport = FeatureSupport.None;
 
+    public enum SystemSplashScreenType
+    {
+        Mono = 0,
+        Stereo = 1,
+    }
+
     public Texture2D systemSplashScreen;
+    public SystemSplashScreenType systemSplashScreenType;
 
 #if OVR_UNITY_PACKAGE_MANAGER
     // Store the checksum of native plugins to compare and prompt for editor restarts when changed
@@ -239,6 +256,7 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
             projectConfig.handTrackingSupport = HandTrackingSupport.ControllersOnly;
             projectConfig.handTrackingFrequency = HandTrackingFrequency.LOW;
             projectConfig.handTrackingVersion = HandTrackingVersion.Default;
+            projectConfig.multimodalHandsControllersSupport = MultimodalHandsControllersSupport.Disabled;
             projectConfig.anchorSupport = AnchorSupport.Disabled;
             projectConfig.sharedAnchorSupport = FeatureSupport.None;
             projectConfig.trackedKeyboardSupport = TrackedKeyboardSupport.None;
@@ -247,6 +265,7 @@ public class OVRProjectConfig : ScriptableObject, ISerializationCallbackReceiver
             projectConfig.faceTrackingSupport = FeatureSupport.None;
             projectConfig.eyeTrackingSupport = FeatureSupport.None;
             projectConfig.virtualKeyboardSupport = FeatureSupport.None;
+            projectConfig.sceneSupport = FeatureSupport.None;
             projectConfig.disableBackups = true;
             projectConfig.enableNSCConfig = true;
             projectConfig.skipUnneededShaders = false;
@@ -317,4 +336,14 @@ internal static class OVRProjectConfigExtensions
 {
     public static string ToRequiredAttributeValue(this OVRProjectConfig.FeatureSupport value)
         => value == OVRProjectConfig.FeatureSupport.Required ? "true" : "false";
+
+    public static string ToManifestTag(this OVRProjectConfig.SystemSplashScreenType type)
+    {
+        return type switch
+        {
+            OVRProjectConfig.SystemSplashScreenType.Mono => "mono",
+            OVRProjectConfig.SystemSplashScreenType.Stereo => "stereo",
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
 }

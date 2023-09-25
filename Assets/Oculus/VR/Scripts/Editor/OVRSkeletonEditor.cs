@@ -48,7 +48,7 @@ public class OVRSkeletonEditor : Editor
 
     internal static bool IsSkeletonProperlyConfigured(OVRSkeleton skeleton)
     {
-        return skeleton.GetSkeletonType() != OVRSkeleton.SkeletonType.Body ||
+        return !OVRSkeleton.IsBodySkeleton(skeleton.GetSkeletonType()) ||
                skeleton.SearchSkeletonDataProvider() != null;
     }
 

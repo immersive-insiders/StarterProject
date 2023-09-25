@@ -305,6 +305,28 @@ namespace Oculus.Interaction.GrabAPI
             return _fingerPinchGrabAPI.GetFingerGrabScore(finger);
         }
 
+        public float GetFingerPinchPercent(HandFinger finger)
+        {
+            if (_fingerPinchGrabAPI is FingerPinchGrabAPI)
+            {
+                FingerPinchGrabAPI pinchGrab = _fingerPinchGrabAPI as FingerPinchGrabAPI;
+                return pinchGrab.GetFingerPinchPercent(finger);
+            }
+            Debug.LogWarning("GetFingerPinchPercent is not applicable");
+            return -1;
+        }
+
+        public float GetFingerPinchDistance(HandFinger finger)
+        {
+            if (_fingerPinchGrabAPI is FingerPinchGrabAPI)
+            {
+                FingerPinchGrabAPI pinchGrab = _fingerPinchGrabAPI as FingerPinchGrabAPI;
+                return pinchGrab.GetFingerPinchDistance(finger);
+            }
+            Debug.LogWarning("GetFingerPinchDistance is not applicable");
+            return -1;
+        }
+
         public float GetFingerPalmStrength(HandFinger finger)
         {
             return _fingerPalmGrabAPI.GetFingerGrabScore(finger);
@@ -367,6 +389,11 @@ namespace Oculus.Interaction.GrabAPI
         public bool GetFingerIsGrabbing(HandFinger finger)
         {
             return _fingerPinchGrabAPI.GetFingerIsGrabbing(finger);
+        }
+
+        public bool GetFingerIsPalmGrabbing(HandFinger finger)
+        {
+            return _fingerPalmGrabAPI.GetFingerIsGrabbing(finger);
         }
 
         #region Inject

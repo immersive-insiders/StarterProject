@@ -11,15 +11,27 @@ using Meta.Voice.Hub.Interfaces;
 using Meta.Voice.Hub.UIComponents;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Meta.Voice.Hub
 {
     [MetaHubPageScriptableObject]
-    public class ImagePage : ScriptableObject
+    public class ImagePage : ScriptableObject, IPageInfo
     {
-        [SerializeField] public Texture2D image;
+        [SerializeField] private string _displayName;
+        [SerializeField] private string _prefix;
+        [SerializeField] private MetaHubContext _context;
+        [SerializeField] private int _priority = 0;
+        [SerializeField] [FormerlySerializedAs("image")]
+        private Texture2D _image;
+
+        public string Name => _displayName ?? name;
+        public string Context => _context?.Name;
+        public int Priority => _priority;
+        public string Prefix => _prefix;
+        internal Texture2D Image => _image;
     }
-    
+
     [CustomEditor(typeof(ImagePage))]
     public class ImageDisplayScriptableObjectEditor : Editor
     {
@@ -34,9 +46,9 @@ namespace Meta.Voice.Hub
 
         public override void OnInspectorGUI()
         {
-            if (_imageDisplay.image)
+            if (_imageDisplay.Image)
             {
-                _imageView.Draw(_imageDisplay.image);
+                _imageView.Draw(_imageDisplay.Image);
             }
             else
             {

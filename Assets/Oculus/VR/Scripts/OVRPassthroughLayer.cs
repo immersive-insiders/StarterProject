@@ -227,15 +227,15 @@ public class OVRPassthroughLayer : MonoBehaviour
         styleDirty = true;
     }
 
-
     /// <summary>
     /// Applies a color LUT to the passthrough layer.
-    /// This is an experimental feature, please see
-    /// https://developer.oculus.com/experimental/experimental-overview/ for more information
-    /// and ensure that Experimental Features are enabled in OVRManager - Quest Features - Experimental.
     /// </summary>
     /// <param name="lut"></param>
-    /// <param name="weight">Value between 0 and 1 which defines the blend between lut and passthrough</param>
+    /// <param name="weight"> Value between 0 and 1 which defines the blend between the original Passthrough colors and
+    ///   the LUT. If `weight` is 0, the appearance of Passthrough is unchanged. If `weight` is 1, the colors are fully
+    ///   taken from the LUT. Values between 0 and 1 lead to a linear interpolation between the original color and the
+    ///   LUT color. This value can be animated to create smooth transitions.
+    /// </param>
     public void SetColorLut(OVRPassthroughColorLut lut, float weight = 1)
     {
         if (lut != null && lut.IsInitialized)
@@ -254,12 +254,13 @@ public class OVRPassthroughLayer : MonoBehaviour
 
     /// <summary>
     /// Applies the interpolation between two color LUTs to the passthrough layer.
-    /// This is an experimental feature, please see
-    /// https://developer.oculus.com/experimental/experimental-overview/ for more information.
     /// </summary>
     /// <param name="lutSource"></param>
     /// <param name="lutTarget"></param>
-    /// <param name="weight">Value between 0 and 1 which defines the blend between lutSource and lutTarget</param>
+    /// <param name="weight">Value between 0 and 1 which defines the blend between lutSource and lutTarget. The output
+    ///   color is computed as `C_result = (1 - weight) * lutSource[C_in] + weight * lutTarget[C_in]`, where `C_in`
+    ///   represents the original Passthrough color. This value can be animated to create smooth transitions.
+    /// </param>
     public void SetColorLut(OVRPassthroughColorLut lutSource, OVRPassthroughColorLut lutTarget, float weight)
     {
         if (lutSource != null && lutSource.IsInitialized

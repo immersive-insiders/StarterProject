@@ -35,6 +35,8 @@ internal static class OVRTelemetryPopup
         {
             ShowPopup();
         }
+
+        OVRRuntimeSettings.Instance.SendConsentEvent(OVRTelemetryConstants.OVRManager.ConsentOrigins.Legacy);
     }
 
     private static bool ShouldShowPopup()
@@ -62,6 +64,7 @@ internal static class OVRTelemetryPopup
 
     private static void RecordConsent(bool consent)
     {
-        OVRRuntimeSettings.Instance.TelemetryEnabled = consent;
+        OVRRuntimeSettings.Instance.SetTelemetryEnabled(consent,
+            OVRTelemetryConstants.OVRManager.ConsentOrigins.Popup);
     }
 }

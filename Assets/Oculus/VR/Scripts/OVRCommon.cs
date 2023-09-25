@@ -381,7 +381,9 @@ public static partial class OVRExtensions
 //4 types of node state properties that can be queried with UnityEngine.XR
 public enum NodeStatePropertyType
 {
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     Acceleration,
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     AngularAcceleration,
     Velocity,
     AngularVelocity,
@@ -419,6 +421,7 @@ public static class OVRNodeStateProperties
         retVec = Vector3.zero;
         switch (propertyType)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             case NodeStatePropertyType.Acceleration:
                 if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)
                 {
@@ -440,6 +443,7 @@ public static class OVRNodeStateProperties
                 if (GetUnityXRNodeStateVector3(nodeType, NodeStatePropertyType.AngularAcceleration, out retVec))
                     return true;
                 break;
+#pragma warning restore CS0618 // Type or member is obsolete
 
             case NodeStatePropertyType.Velocity:
                 if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)
@@ -532,6 +536,7 @@ public static class OVRNodeStateProperties
         if (!ValidateProperty(nodeType, ref requestedNodeState))
             return false;
 
+#pragma warning disable CS0618 // Type or member is obsolete
         if (propertyType == NodeStatePropertyType.Acceleration)
         {
             if (requestedNodeState.TryGetAcceleration(out retVec))
@@ -546,6 +551,7 @@ public static class OVRNodeStateProperties
                 return true;
             }
         }
+#pragma warning restore CS0618 // Type or member is obsolete
         else if (propertyType == NodeStatePropertyType.Velocity)
         {
             if (requestedNodeState.TryGetVelocity(out retVec))

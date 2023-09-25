@@ -255,6 +255,8 @@ public class OVRGradleGeneration
             OVRDeviceSelector.isTargetDeviceQuest2);
 
         OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
+
+        // Toggle & generate system splash screen
         if (projectConfig != null && projectConfig.systemSplashScreen != null)
         {
             if (PlayerSettings.virtualRealitySplashScreen != null)
@@ -270,20 +272,18 @@ public class OVRGradleGeneration
                     "Invalid file format of System Splash Screen. It has to be a PNG file to be used by the Quest OS. The asset path: " +
                     splashScreenAssetPath);
             }
-            else
+
+            string sourcePath = splashScreenAssetPath;
+            string targetFolder = Path.Combine(path, "src/main/assets");
+            string targetPath = targetFolder + "/vr_splash.png";
+            UnityEngine.Debug.LogFormat("Copy splash screen asset from {0} to {1}", sourcePath, targetPath);
+            try
             {
-                string sourcePath = splashScreenAssetPath;
-                string targetFolder = Path.Combine(path, "src/main/assets");
-                string targetPath = targetFolder + "/vr_splash.png";
-                UnityEngine.Debug.LogFormat("Copy splash screen asset from {0} to {1}", sourcePath, targetPath);
-                try
-                {
-                    File.Copy(sourcePath, targetPath, true);
-                }
-                catch (Exception e)
-                {
-                    throw new BuildFailedException(e.Message);
-                }
+                File.Copy(sourcePath, targetPath, true);
+            }
+            catch (Exception e)
+            {
+                throw new BuildFailedException(e.Message);
             }
         }
 

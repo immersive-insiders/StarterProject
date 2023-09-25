@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-using Meta.Voice.Hub;
+using System.Collections.Generic;
 using Meta.Voice.Hub.Attributes;
 using Meta.Voice.Hub.Interfaces;
 using Meta.Voice.VSDKHub;
@@ -27,6 +27,7 @@ using Meta.WitAi.Windows;
 using Oculus.Voice.Utility;
 using Oculus.Voice.Windows;
 using UnityEngine;
+using Meta.Voice.TelemetryUtilities;
 
 namespace Meta.Voice.Windows
 {
@@ -56,6 +57,10 @@ namespace Meta.Voice.Windows
         protected override void OnEnable()
         {
             base.OnEnable();
+            Telemetry.LogInstantEvent(Telemetry.TelemetryEventId.OpenUi, new Dictionary<Telemetry.AnnotationKey, string>()
+            {
+                {Telemetry.AnnotationKey.PageId, "Configuration Window"}
+            });
             titleContent = Title;
         }
 

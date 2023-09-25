@@ -112,68 +112,68 @@ public class OVRGridCube : MonoBehaviour
         CubeGrid.layer = CameraController.gameObject.layer;
 
         for (int x = -gridSizeX; x <= gridSizeX; x++)
-        for (int y = -gridSizeY; y <= gridSizeY; y++)
-        for (int z = -gridSizeZ; z <= gridSizeZ; z++)
-        {
-            // Set the cube type:
-            // 0 = non-axis cube
-            // 1 = axis cube
-            // 2 = center cube
-            int CubeType = 0;
-            if ((x == 0 && y == 0) || (x == 0 && z == 0) || (y == 0 && z == 0))
-            {
-                if ((x == 0) && (y == 0) && (z == 0))
-                    CubeType = 2;
-                else
-                    CubeType = 1;
-            }
+            for (int y = -gridSizeY; y <= gridSizeY; y++)
+                for (int z = -gridSizeZ; z <= gridSizeZ; z++)
+                {
+                    // Set the cube type:
+                    // 0 = non-axis cube
+                    // 1 = axis cube
+                    // 2 = center cube
+                    int CubeType = 0;
+                    if ((x == 0 && y == 0) || (x == 0 && z == 0) || (y == 0 && z == 0))
+                    {
+                        if ((x == 0) && (y == 0) && (z == 0))
+                            CubeType = 2;
+                        else
+                            CubeType = 1;
+                    }
 
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-            BoxCollider bc = cube.GetComponent<BoxCollider>();
-            bc.enabled = false;
+                    BoxCollider bc = cube.GetComponent<BoxCollider>();
+                    bc.enabled = false;
 
-            cube.layer = CameraController.gameObject.layer;
+                    cube.layer = CameraController.gameObject.layer;
 
-            // No shadows
-            Renderer r = cube.GetComponent<Renderer>();
+                    // No shadows
+                    Renderer r = cube.GetComponent<Renderer>();
 
 #if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3 || UNITY_4_5 || UNITY_4_6
             // Renderer.castShadows was deprecated starting in Unity 5.0
             r.castShadows = false;
 #else
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 #endif
 
-            r.receiveShadows = false;
+                    r.receiveShadows = false;
 
-            // Cube line is white down the middle
-            if (CubeType == 0)
-                r.material.color = Color.red;
-            else if (CubeType == 1)
-                r.material.color = Color.white;
-            else
-                r.material.color = Color.yellow;
+                    // Cube line is white down the middle
+                    if (CubeType == 0)
+                        r.material.color = Color.red;
+                    else if (CubeType == 1)
+                        r.material.color = Color.white;
+                    else
+                        r.material.color = Color.yellow;
 
-            cube.transform.position =
-                new Vector3(((float)x * gridScale),
-                    ((float)y * gridScale),
-                    ((float)z * gridScale));
+                    cube.transform.position =
+                        new Vector3(((float)x * gridScale),
+                            ((float)y * gridScale),
+                            ((float)z * gridScale));
 
-            float s = 0.7f;
+                    float s = 0.7f;
 
-            // Axis cubes are bigger
-            if (CubeType == 1)
-                s = 1.0f;
-            // Center cube is the largest
-            if (CubeType == 2)
-                s = 2.0f;
+                    // Axis cubes are bigger
+                    if (CubeType == 1)
+                        s = 1.0f;
+                    // Center cube is the largest
+                    if (CubeType == 2)
+                        s = 2.0f;
 
-            cube.transform.localScale =
-                new Vector3(cubeScale * s, cubeScale * s, cubeScale * s);
+                    cube.transform.localScale =
+                        new Vector3(cubeScale * s, cubeScale * s, cubeScale * s);
 
-            cube.transform.parent = CubeGrid.transform;
-        }
+                    cube.transform.parent = CubeGrid.transform;
+                }
     }
 
     /// <summary>

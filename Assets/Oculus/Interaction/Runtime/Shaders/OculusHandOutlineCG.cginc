@@ -107,7 +107,7 @@ half4 applyGlow(int glowType, float3 color, float alpha, float2 texCoord, float3
       return half4(color, alpha);
     }
   }
-  if (glowType == 28 || glowType == 29) {
+  else if (glowType == 28 || glowType == 29) {
     float fingerStrength[5];
     getFingerStrength(fingerStrength);
     float4 lines[5];

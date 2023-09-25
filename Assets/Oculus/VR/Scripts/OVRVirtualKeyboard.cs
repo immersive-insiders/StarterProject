@@ -28,6 +28,7 @@ using UnityEngine.UI;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 using System.Linq;
+using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 
 /// <summary>
@@ -39,7 +40,10 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
     public enum KeyboardPosition
     {
         Far = 0,
-        Direct = 1
+        Near = 1,
+        [Obsolete]
+        Direct = 1,
+        Custom = 2,
     }
 
     public class InteractorRootTransformOverride
@@ -132,70 +136,140 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         void Update();
     }
 
-    private class ControllerInputSource : IInputSource
+    private abstract class BaseInputSource : IInputSource, IDisposable
     {
-        private static readonly float TriggerPressedThreshold = 0.9f;
-        private readonly Transform _transform;
-        private readonly InputSource _inputSource;
-        private readonly OVRInput.Controller _controllerType;
-        private readonly OVRInput.RawAxis1D _triggerAxis;
-        private readonly OVRVirtualKeyboard _keyboard;
+        protected readonly bool _operatingWithoutOVRCameraRig;
+        private readonly OVRCameraRig _rig;
 
-        public ControllerInputSource(OVRVirtualKeyboard keyboard, InputSource inputSource,
-            OVRInput.Controller controllerType, Transform transform)
+        protected BaseInputSource()
         {
-            _keyboard = keyboard;
-            _inputSource = inputSource;
-            _controllerType = controllerType;
-            _triggerAxis = _controllerType == OVRInput.Controller.LTouch
-                ? OVRInput.RawAxis1D.LIndexTrigger
-                : OVRInput.RawAxis1D.RIndexTrigger;
-            _transform = transform;
+            _rig = FindObjectOfType<OVRCameraRig>();
+            if (_rig == null) return;
+            _rig.UpdatedAnchors += OnUpdatedAnchors;
+            _operatingWithoutOVRCameraRig = false;
+        }
+
+        private void OnUpdatedAnchors(OVRCameraRig obj)
+        {
+            UpdateInput();
         }
 
         public void Update()
         {
-            if (!OVRInput.GetControllerPositionValid(_controllerType) || !_transform)
+            if (_operatingWithoutOVRCameraRig)
+            {
+                UpdateInput();
+            }
+        }
+
+        protected abstract void UpdateInput();
+
+        public void Dispose()
+        {
+            if (_rig != null)
+            {
+                _rig.UpdatedAnchors -= OnUpdatedAnchors;
+            }
+        }
+    }
+    private class ControllerInputSource : BaseInputSource
+    {
+        private readonly Transform _rootTransform;
+        private readonly Transform _directTransform;
+        private readonly InputSource _inputSource;
+        private readonly OVRInput.Controller _controllerType;
+        private readonly OVRVirtualKeyboard _keyboard;
+        private int _lastFrameCount;
+        private readonly OVRInput.RawButton _triggerButton;
+
+        private bool TriggerIsPressed => OVRInput.Get(_triggerButton);
+
+        public ControllerInputSource(OVRVirtualKeyboard keyboard, InputSource inputSource,
+            OVRInput.Controller controllerType, Transform rootTransform, Transform directTransform) : base()
+        {
+            _keyboard = keyboard;
+            _inputSource = inputSource;
+            _controllerType = controllerType;
+            _triggerButton = _controllerType == OVRInput.Controller.LTouch
+                ? OVRInput.RawButton.LIndexTrigger
+                : OVRInput.RawButton.RIndexTrigger;
+            _rootTransform = rootTransform;
+            _directTransform = directTransform;
+        }
+
+        protected override void UpdateInput()
+        {
+            if (!_keyboard.InputEnabled || !OVRInput.GetControllerPositionValid(_controllerType) || !_rootTransform)
             {
                 return;
             }
 
+            if (Time.frameCount == _lastFrameCount)
+            {
+                // Input already sent for frame
+                return;
+            }
+            _lastFrameCount = Time.frameCount;
+
             if (_keyboard.controllerRayInteraction)
             {
                 _keyboard.SendVirtualKeyboardRayInput(
-                    _transform, _inputSource,
-                    OVRInput.Get(_triggerAxis) > TriggerPressedThreshold);
+                    _directTransform, _inputSource,
+                    TriggerIsPressed);
             }
 
             if (_keyboard.controllerDirectInteraction)
             {
-                _keyboard.SendVirtualKeyboardDirectInput(_transform.position, _inputSource,
-                    OVRInput.Get(_triggerAxis) > TriggerPressedThreshold);
+                _keyboard.SendVirtualKeyboardDirectInput(
+                    _directTransform.position,
+                    _inputSource,
+                    TriggerIsPressed,
+                    _rootTransform);
             }
         }
     }
 
-    private class HandInputSource : IInputSource
+    private class HandInputSource : BaseInputSource
     {
         private readonly OVRHand _hand;
         private readonly InputSource _inputSource;
         private readonly OVRVirtualKeyboard _keyboard;
         private readonly OVRSkeleton _skeleton;
+        private int _lastFrameCount;
 
-        public HandInputSource(OVRVirtualKeyboard keyboard, InputSource inputSource, OVRHand hand)
+        public HandInputSource(OVRVirtualKeyboard keyboard, InputSource inputSource, OVRHand hand) : base()
         {
+            if (!keyboard)
+            {
+                throw new ArgumentNullException("keyboard");
+            }
             _keyboard = keyboard;
+            if (!hand)
+            {
+                throw new ArgumentNullException("hand");
+            }
             _hand = hand;
             _skeleton = _hand.GetComponent<OVRSkeleton>();
+            if (!_skeleton && _keyboard.handDirectInteraction)
+            {
+                Debug.LogWarning("Hand Direct Interaction requires an OVRSkeleton on the OVRHand");
+            }
             _inputSource = inputSource;
         }
 
-        public void Update()
+        protected override void UpdateInput()
         {
-            if (!_hand)
+            if (!_keyboard.InputEnabled || !_hand)
             {
                 return;
             }
+
+            if (Time.frameCount == _lastFrameCount)
+            {
+                // Input already sent for frame
+                return;
+            }
+            _lastFrameCount = Time.frameCount;
 
             if (_keyboard.handRayInteraction && _hand.IsPointerPoseValid)
             {
@@ -245,6 +319,9 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
 
     public Collider Collider { get; private set; }
 
+    [SerializeField]
+    private KeyboardPosition InitialPosition = KeyboardPosition.Custom;
+
     /// <summary>
     /// Unity UI field to automatically commit text into. (optional)
     /// </summary>
@@ -253,12 +330,17 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
     private InputField textCommitField;
 
     [Header("Controller Input")]
-    public Transform leftControllerInputTransform;
+    [FormerlySerializedAs("leftControllerInputTransform")]
+    public Transform leftControllerRootTransform;
+    public Transform leftControllerDirectTransform;
 
-    public Transform rightControllerInputTransform;
+    [FormerlySerializedAs("rightControllerInputTransform")]
+    public Transform rightControllerRootTransform;
+    public Transform rightControllerDirectTransform;
+
     public bool controllerDirectInteraction = true;
     public bool controllerRayInteraction = true;
-    public LayerMask controllerRaycastLayerMask = 1 << 0;
+    public OVRPhysicsRaycaster controllerRaycaster;
 
     [Header("Hand Input")]
     public OVRHand handLeft;
@@ -266,7 +348,7 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
     public OVRHand handRight;
     public bool handDirectInteraction = true;
     public bool handRayInteraction = true;
-    public LayerMask handRaycastLayerMask = 1 << 0;
+    public OVRPhysicsRaycaster handRaycaster;
 
     [Header("Graphics")]
     public Shader keyboardModelShader;
@@ -337,8 +419,29 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
             throw new Exception("OVRVirtualKeyboard only supports a single instance");
         }
 
+        if (leftControllerDirectTransform == null && leftControllerRootTransform != null)
+        {
+            if (controllerDirectInteraction)
+            {
+                Debug.LogWarning("Missing left controller direct transform for virtual keyboard input; falling back to the root!");
+            }
+            leftControllerDirectTransform = leftControllerRootTransform;
+        }
+
+        if (rightControllerDirectTransform == null && rightControllerRootTransform != null)
+        {
+            if (controllerDirectInteraction)
+            {
+                Debug.LogWarning("Missing right controller direct transform for virtual keyboard input; falling back to the root!");
+            }
+            rightControllerDirectTransform = rightControllerRootTransform;
+        }
+
         singleton_ = this;
-        OVRManager.instance.RegisterEventListener(this);
+        if (OVRManager.instance)
+        {
+            OVRManager.instance.RegisterEventListener(this);
+        }
 
         // Initialize serialized text commit field
         TextCommitField = textCommitField;
@@ -384,17 +487,68 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         HideKeyboard();
     }
 
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        transform.hideFlags = (InitialPosition == KeyboardPosition.Custom) ? HideFlags.None : HideFlags.NotEditable;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (enabled && !modelAvailable_)
+        {
+            // The keyboard model is a runtime loaded GLTF file
+            // For Editor testing without Link, draw a simple keyboard representation gizmo
+
+            // Use approximate positions for Far/Near, not guaranteed match Oculus Runtime
+            Vector3 position;
+            Quaternion rotation;
+            Vector3 scale;
+            switch (InitialPosition)
+            {
+                case KeyboardPosition.Far:
+                    position = new Vector3(0, -0.5f, 1f);
+                    rotation = Quaternion.identity;
+                    scale = Vector3.one;
+                    break;
+                case KeyboardPosition.Near:
+                    position = new Vector3(0, -0.4f, 0.4f);
+                    rotation = Quaternion.Euler(65, 0, 0);
+                    scale = Vector3.one * 0.4f;
+                    break;
+                case KeyboardPosition.Custom:
+                default:
+                    position = transform.position;
+                    rotation = transform.rotation;
+                    scale = transform.lossyScale;
+                    break;
+            }
+            Gizmos.matrix = Matrix4x4.TRS(position, rotation, scale);
+
+            // Draw Keyboard Background
+            Gizmos.color = new Color(0.9f, 1, 0.9f, 0.8f);
+            Gizmos.DrawWireCube(new Vector3(0, 0, 0.005f), new Vector3(1.0f, 0.4f, 0.01f));
+            // Draw Spacebar Key
+            Gizmos.color = new Color(0.9f, 1, 0.9f, 0.4f);
+            Gizmos.DrawWireCube(new Vector3(0, -0.13f, 0), new Vector3(0.6f, 0.08f, 0));
+        }
+    }
+#endif
+
     // public functions
     public void UseSuggestedLocation(KeyboardPosition position)
     {
         OVRPlugin.VirtualKeyboardLocationInfo locationInfo = new OVRPlugin.VirtualKeyboardLocationInfo();
         switch (position)
         {
-            case KeyboardPosition.Direct:
+            case KeyboardPosition.Near:
                 locationInfo.locationType = OVRPlugin.VirtualKeyboardLocationType.Direct;
                 break;
             case KeyboardPosition.Far:
                 locationInfo.locationType = OVRPlugin.VirtualKeyboardLocationType.Far;
+                break;
+            case KeyboardPosition.Custom:
+                locationInfo = ComputeLocation(transform);
                 break;
             default:
                 Debug.LogError("Unknown KeyboardInputMode: " + position);
@@ -405,7 +559,11 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         if (result != OVRPlugin.Result.Success)
         {
             Debug.LogError("SuggestVirtualKeyboardLocation failed: " + result);
+            return;
         }
+        // Clear transform has changed state to avoid a custom location overriding the SuggestVirtualKeyboardLocation call
+        transform.hasChanged = false;
+        SyncKeyboardLocation();
     }
 
     public void SendVirtualKeyboardRayInput(Transform inputTransform,
@@ -420,16 +578,23 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
             _ => throw new Exception("Unknown input source: " + source)
         };
 
-        var ray = new Ray(inputTransform.position, inputTransform.forward);
-        LayerMask raycastMask = (source == InputSource.ControllerLeft || source == InputSource.ControllerRight)
-            ? controllerRaycastLayerMask
-            : handRaycastLayerMask;
-        if (useRaycastMask && Physics.Raycast(ray, out var hitInfo, 100,
-                raycastMask, QueryTriggerInteraction.Ignore) && hitInfo.collider != this.Collider)
-        {
-            return;
-        }
+        var raycaster = (source == InputSource.ControllerLeft || source == InputSource.ControllerRight)
+            ? controllerRaycaster
+            : handRaycaster;
 
+        if (raycaster)
+        {
+            var pointerData = new OVRPointerEventData(EventSystem.current)
+            {
+                worldSpaceRay = new Ray(inputTransform.position, inputTransform.forward)
+            };
+            var results = new List<RaycastResult>();
+            raycaster.Raycast(pointerData, results);
+            if (results.Count <= 0 || results[0].gameObject != Collider.gameObject)
+            {
+                return;
+            }
+        }
         SendVirtualKeyboardInput(inputSource, inputTransform.ToOVRPose(), isPressed);
     }
 
@@ -542,10 +707,15 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
                     gltfLoader.SetModelShader(keyboardModelShader);
                     gltfLoader.SetModelAlphaBlendShader(keyboardModelAlphaBlendShader);
                     virtualKeyboardScene_ = gltfLoader.LoadGLB(supportAnimation: true, loadMips: true);
-                    virtualKeyboardScene_.root.gameObject.name = "OVRVirtualKeyboardModel";
+
                     modelAvailable_ = virtualKeyboardScene_.root != null;
                     if (modelAvailable_)
                     {
+                        virtualKeyboardScene_.root.transform.SetParent(transform, false);
+                        virtualKeyboardScene_.root.gameObject.name = "OVRVirtualKeyboardModel";
+                        // keyboard is not intended for modification
+                        ApplyHideFlags(virtualKeyboardScene_.root.transform);
+                        UseSuggestedLocation(InitialPosition);
                         PopulateCollision();
                     }
                 }
@@ -553,6 +723,15 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         }
 
         return modelAvailable_;
+    }
+
+    private static void ApplyHideFlags(Transform t)
+    {
+        t.gameObject.hideFlags = HideFlags.NotEditable | HideFlags.DontSave;
+        for (int i = 0; i < t.childCount; i++)
+        {
+            ApplyHideFlags(t.GetChild(i));
+        }
     }
 
     private void PopulateCollision()
@@ -567,6 +746,7 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         if (collisionMesh != null)
         {
             var meshCollider = collisionMesh.gameObject.AddComponent<MeshCollider>();
+            meshCollider.convex = true;
             Collider = meshCollider;
         }
     }
@@ -580,13 +760,18 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
             var result = OVRPlugin.CreateVirtualKeyboard(createInfo);
             if (result != OVRPlugin.Result.Success)
             {
-                Debug.LogError("Create failed: '" + result + "'. Check for Virtual Keyboard Support.");
+#if UNITY_EDITOR
+                if (result == OVRPlugin.Result.Failure_Unsupported || result == OVRPlugin.Result.Failure_NotInitialized)
+                {
+                    Debug.LogWarning("Virtual Keyboard Unity Editor support requires Quest Link.");
+                }
+                else
+#endif
+                {
+                    Debug.LogError("Create failed: '" + result + "'. Check for Virtual Keyboard Support.");
+                }
                 return;
             }
-
-            // Once created the keyboard should be positioned
-            // instead of using a default location, initially use with the unity keyboard root transform
-            var locationInfo = ComputeLocation(transform);
 
             var createSpaceInfo = new OVRPlugin.VirtualKeyboardSpaceCreateInfo();
             createSpaceInfo.pose = OVRPlugin.Posef.identity;
@@ -597,12 +782,7 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
                 return;
             }
 
-            result = OVRPlugin.SuggestVirtualKeyboardLocation(locationInfo);
-            if (result != OVRPlugin.Result.Success)
-            {
-                Debug.LogError("Create failed to position keyboard: " + result);
-                return;
-            }
+            UseSuggestedLocation(InitialPosition);
 
             // Initialize the keyboard model
             if (modelInitialized_ != true)
@@ -627,7 +807,6 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         try
         {
             SetKeyboardVisibility(true);
-            UpdateKeyboardLocation();
             isKeyboardCreated_ = true;
         }
         catch
@@ -692,6 +871,8 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
 
             Debug.Log("Destroy success");
         }
+        _inputSources?.Clear();
+        _inputSources = null;
 
         isKeyboardCreated_ = false;
     }
@@ -712,16 +893,6 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         location.pose.Orientation = transform.rotation.ToFlippedZQuatf();
         location.scale = MaxElement(transform.localScale);
         return location;
-    }
-
-    private void UpdateKeyboardLocation()
-    {
-        var locationInfo = ComputeLocation(transform);
-        var result = OVRPlugin.SuggestVirtualKeyboardLocation(locationInfo);
-        if (result != OVRPlugin.Result.Success)
-        {
-            Debug.LogError("Failed to update keyboard location: " + result);
-        }
     }
 
     void Update()
@@ -774,16 +945,28 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
             return;
         }
 
-        _inputSources ??= new List<IInputSource>()
+        if (_inputSources == null)
         {
-            new ControllerInputSource(this, InputSource.ControllerLeft, OVRInput.Controller.LTouch,
-                leftControllerInputTransform),
-            new ControllerInputSource(this, InputSource.ControllerRight, OVRInput.Controller.RTouch,
-                rightControllerInputTransform),
-            new HandInputSource(this, InputSource.HandLeft, handLeft),
-            new HandInputSource(this, InputSource.HandRight, handRight)
-        };
-
+            _inputSources = new List<IInputSource>();
+            if (leftControllerRootTransform)
+            {
+                _inputSources.Add(new ControllerInputSource(this, InputSource.ControllerLeft, OVRInput.Controller.LTouch,
+                    leftControllerRootTransform, leftControllerDirectTransform));
+            }
+            if (rightControllerRootTransform)
+            {
+                _inputSources.Add(new ControllerInputSource(this, InputSource.ControllerRight, OVRInput.Controller.RTouch,
+                    rightControllerRootTransform, rightControllerDirectTransform));
+            }
+            if (handLeft)
+            {
+                _inputSources.Add(new HandInputSource(this, InputSource.HandLeft, handLeft));
+            }
+            if (handRight)
+            {
+                _inputSources.Add(new HandInputSource(this, InputSource.HandRight, handRight));
+            }
+        }
         foreach (var inputSource in _inputSources)
         {
             inputSource.Update();
@@ -799,7 +982,7 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
             var scale = MaxElement(transform.localScale);
             var maxScale = Vector3.one * scale;
             transform.localScale = maxScale;
-            UpdateKeyboardLocation();
+            UseSuggestedLocation(KeyboardPosition.Custom);
         }
 
         // query the runtime for the true position
@@ -816,20 +999,13 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
             return;
         }
 
-        transform.SetPositionAndRotation(keyboardPose.Position.FromFlippedZVector3f(),
+        Transform keyboardTransform = transform;
+        keyboardTransform.SetPositionAndRotation(
+            keyboardPose.Position.FromFlippedZVector3f(),
             keyboardPose.Orientation.FromFlippedZQuatf());
-        transform.localScale = new Vector3(keyboardScale, keyboardScale, keyboardScale);
-
-        if (modelAvailable_)
-        {
-            virtualKeyboardScene_.root.transform.position = keyboardPose.Position.FromFlippedZVector3f();
-            // Rotate to face user
-            virtualKeyboardScene_.root.transform.rotation =
-                keyboardPose.Orientation.FromFlippedZQuatf() * Quaternion.Euler(0, 180f, 0);
-            virtualKeyboardScene_.root.transform.localScale = transform.localScale;
-        }
-
-        transform.hasChanged = false;
+        keyboardTransform.localScale = Vector3.one * keyboardScale;
+        // Reset the change flag to prevent recursive updates
+        keyboardTransform.hasChanged = false;
     }
 
     private void UpdateAnimationState()
@@ -999,7 +1175,7 @@ public class OVRVirtualKeyboard : MonoBehaviour, OVRManager.EventListener
         {
             return;
         }
-        if (TextCommitField.multiLine)
+        if (TextCommitField.lineType == InputField.LineType.MultiLineNewline)
         {
             OnCommitText("\n");
         }

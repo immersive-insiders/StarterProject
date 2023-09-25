@@ -48,7 +48,7 @@
         {
             "name": "com.unity.xr.oculus",
             "expression": "1.7.0",
-            "define": "PRIORITIZE_OCULUS_XR_SETTINGS"
+            "define": "__OVERRIDED__PRIORITIZE_OCULUS_XR_SETTINGS"
         },
         {
             "name": "com.unity.xr.oculus",
@@ -79,6 +79,11 @@
             "name": "com.unity.xr.oculus",
             "expression": "4.0.0",
             "define": "OCULUS_XR_PLUGIN_QUEST_ONE_REMOVED"
+        },
+        {
+            "name": "com.unity.xr.management",
+            "expression": "4.4.0",
+            "define": "XR_MGMT_4_4_0_OR_NEWER"
         }
     ],
     "noEngineReferences": false

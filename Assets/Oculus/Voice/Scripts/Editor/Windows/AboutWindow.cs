@@ -23,6 +23,7 @@ using Meta.Voice.Hub.Attributes;
 using Meta.Voice.Hub.Interfaces;
 using Meta.WitAi;
 using Oculus.Voice.Utility;
+using Oculus.Voice;
 using UnityEngine;
 
 namespace Meta.Voice
@@ -30,15 +31,23 @@ namespace Meta.Voice
     [MetaHubPage("About", VoiceHubConstants.CONTEXT_VOICE,  priority: 1000)]
     public class AboutWindow : IMetaHubPage
     {
+        private Vector2 _offset;
+
         public void OnGUI()
         {
-            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutVoiceSdkVersionLabel, VoiceSDKVersion.VERSION);
+            Vector2 size;
+            WitEditorUI.LayoutWindow(VoiceSDKStyles.Texts.AboutTitleLabel, null, null, null, OnWindowGUI, ref _offset, out size);
+        }
+
+        private void OnWindowGUI()
+        {
+            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutVoiceSdkVersionLabel, VoiceSDKConstants.SdkVersion);
             WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutWitSdkVersionLabel, WitConstants.SDK_VERSION);
             WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutWitApiVersionLabel, WitConstants.API_VERSION);
 
             GUILayout.Space(16);
 
-            if (GUILayout.Button(VoiceSDKStyles.Texts.AboutTutorialButtonLabel, WitStyles.TextButton))
+            if (WitEditorUI.LayoutTextButton(VoiceSDKStyles.Texts.AboutTutorialButtonLabel))
             {
                 Application.OpenURL(VoiceSDKStyles.Texts.AboutTutorialButtonUrl);
             }

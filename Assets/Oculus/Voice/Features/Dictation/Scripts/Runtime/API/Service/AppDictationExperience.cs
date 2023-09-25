@@ -22,7 +22,6 @@ using System;
 using System.Globalization;
 using Meta.Voice;
 using Meta.WitAi;
-using Meta.WitAi.Json;
 using Meta.WitAi.Configuration;
 using Meta.WitAi.Data.Configuration;
 using Meta.WitAi.Dictation;
@@ -72,10 +71,7 @@ namespace Oculus.Voice.Dictation
 
         public event Action OnInitialized;
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-        // This version is auto-updated for a release build
-        private readonly string PACKAGE_VERSION = "54.0.0.135.284";
-#endif
+        private static string PACKAGE_VERSION => VoiceSDKConstants.SdkVersion;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         public bool HasPlatformIntegrations => usePlatformServices && _dictationServiceImpl is PlatformDictationImpl;
@@ -109,6 +105,11 @@ namespace Oculus.Voice.Dictation
 
         private void InitDictation()
         {
+            // Check voice sdk version
+            if (string.IsNullOrEmpty(PACKAGE_VERSION))
+            {
+                VLog.E("No SDK Version Set");
+            }
             // Clean up if we're switching to native C# wit impl
             if (!UsePlatformIntegrations)
             {
@@ -218,6 +219,7 @@ namespace Oculus.Voice.Dictation
                 MicPermissionsManager.RequestMicPermission((e) => InitDictation());
             }
 
+            DictationEvents.OnRequestInitialized.AddListener(OnRequestInit);
             DictationEvents.OnStartListening.AddListener(OnStarted);
             DictationEvents.OnStoppedListening.AddListener(OnStopped);
             DictationEvents.OnComplete.AddListener(OnComplete);
@@ -242,6 +244,7 @@ namespace Oculus.Voice.Dictation
 #endif
             _dictationServiceImpl = null;
             _voiceSDKLogger = null;
+            DictationEvents.OnRequestInitialized.RemoveListener(OnRequestInit);
             DictationEvents.OnStartListening.RemoveListener(OnStarted);
             DictationEvents.OnStoppedListening.RemoveListener(OnStopped);
             DictationEvents.OnComplete.RemoveListener(OnComplete);
@@ -288,19 +291,12 @@ namespace Oculus.Voice.Dictation
                 OnDictationServiceNotAvailable();
                 return null;
             }
-
-            if (null == requestOptions) requestOptions = new WitRequestOptions();
-
             if (!_isActive)
             {
                 _activeSession = new DictationSession();
                 DictationEvents.OnDictationSessionStarted.Invoke(_activeSession);
             }
-
-            _activeRequestOptions = requestOptions;
             _isActive = true;
-            _voiceSDKLogger.LogInteractionStart(requestOptions.RequestId, "dictation");
-            LogRequestConfig();
             return _dictationServiceImpl.Activate(requestOptions, requestEvents);
         }
 
@@ -315,17 +311,12 @@ namespace Oculus.Voice.Dictation
                 OnDictationServiceNotAvailable();
                 return null;
             }
-
             if (!_isActive)
             {
                 _activeSession = new DictationSession();
                 DictationEvents.OnDictationSessionStarted.Invoke(_activeSession);
             }
-
-            _activeRequestOptions = requestOptions;
             _isActive = true;
-            _voiceSDKLogger.LogInteractionStart(requestOptions.RequestId, "dictation");
-            LogRequestConfig();
             return _dictationServiceImpl.ActivateImmediately(requestOptions, requestEvents);
         }
 
@@ -362,6 +353,24 @@ namespace Oculus.Voice.Dictation
         #endregion
 
         #region Listeners for logging
+        void OnRequestInit(VoiceServiceRequest request)
+        {
+            _activeRequestOptions = request?.Options;
+
+            _voiceSDKLogger.LogInteractionStart(request?.Options?.RequestId, "dictation");
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            _voiceSDKLogger.LogAnnotation("clientSDKVersion", PACKAGE_VERSION);
+#endif
+            _voiceSDKLogger.LogAnnotation("minWakeThreshold",
+                RuntimeConfiguration?.soundWakeThreshold.ToString(CultureInfo.InvariantCulture));
+            _voiceSDKLogger.LogAnnotation("minKeepAliveTimeSec",
+                RuntimeConfiguration?.minKeepAliveTimeInSeconds.ToString(CultureInfo.InvariantCulture));
+            _voiceSDKLogger.LogAnnotation("minTranscriptionKeepAliveTimeSec",
+                RuntimeConfiguration?.minTranscriptionKeepAliveTimeInSeconds.ToString(CultureInfo.InvariantCulture));
+            _voiceSDKLogger.LogAnnotation("maxRecordingTime",
+                RuntimeConfiguration?.maxRecordingTime.ToString(CultureInfo.InvariantCulture));
+        }
 
         void OnStarted()
         {
@@ -432,21 +441,6 @@ namespace Oculus.Voice.Dictation
                 DictationEvents.OnDictationSessionStopped?.Invoke(_activeSession);
                 CleanupSession();
             }
-        }
-
-        void LogRequestConfig()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            _voiceSDKLogger.LogAnnotation("clientSDKVersion", PACKAGE_VERSION);
-#endif
-            _voiceSDKLogger.LogAnnotation("minWakeThreshold",
-                RuntimeConfiguration?.soundWakeThreshold.ToString(CultureInfo.InvariantCulture));
-            _voiceSDKLogger.LogAnnotation("minKeepAliveTimeSec",
-                RuntimeConfiguration?.minKeepAliveTimeInSeconds.ToString(CultureInfo.InvariantCulture));
-            _voiceSDKLogger.LogAnnotation("minTranscriptionKeepAliveTimeSec",
-                RuntimeConfiguration?.minTranscriptionKeepAliveTimeInSeconds.ToString(CultureInfo.InvariantCulture));
-            _voiceSDKLogger.LogAnnotation("maxRecordingTime",
-                RuntimeConfiguration?.maxRecordingTime.ToString(CultureInfo.InvariantCulture));
         }
         #endregion
 

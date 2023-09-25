@@ -95,13 +95,13 @@ internal class OVRProjectSetupReport
     )
     {
         var tasksReports = tasks.Select(t => new OVRConfigurationTaskJsonReport
-            {
-                uid = t.Uid.ToString(),
-                group = t.Group.ToString(),
-                message = t.Message.GetValue(buildTargetGroup).ToString(),
-                level = t.Level.GetValue(buildTargetGroup).ToString(),
-                isDone = t.IsDone(buildTargetGroup)
-            })
+        {
+            uid = t.Uid.ToString(),
+            group = t.Group.ToString(),
+            message = t.Message.GetValue(buildTargetGroup).ToString(),
+            level = t.Level.GetValue(buildTargetGroup).ToString(),
+            isDone = t.IsDone(buildTargetGroup)
+        })
             .ToList();
 
         var report = new OVRProjectSetupJsonReport

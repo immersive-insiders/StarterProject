@@ -51,7 +51,6 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
         Win,
         Win64,
         Win64OpenXR,
-        MetaXRSimulator,
     }
 
     class PluginPackage
@@ -281,10 +280,6 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
                 { PluginPlatform.Win, rootPath + GetPluginBuildTargetSubPath(PluginPlatform.Win) },
                 { PluginPlatform.Win64, rootPath + GetPluginBuildTargetSubPath(PluginPlatform.Win64) },
                 { PluginPlatform.Win64OpenXR, rootPath + GetPluginBuildTargetSubPath(PluginPlatform.Win64OpenXR) },
-                {
-                    PluginPlatform.MetaXRSimulator,
-                    rootPath + GetPluginBuildTargetSubPath(PluginPlatform.MetaXRSimulator)
-                },
             }
         };
     }
@@ -356,9 +351,6 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
                 break;
             case PluginPlatform.Win64OpenXR:
                 path = @"/Win64OpenXR/OVRPlugin.dll";
-                break;
-            case PluginPlatform.MetaXRSimulator:
-                path = @"/MetaXRSimulator/SIMULATOR.dll";
                 break;
             default:
                 throw new ArgumentException("Attempted GetPluginBuildTargetSubPath() for unsupported BuildTarget: " +
@@ -533,9 +525,6 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
                         pi.SetPlatformData("Editor", "CPU", "X86_64");
                         pi.SetPlatformData("Editor", "OS", "Windows");
                         break;
-                    case PluginPlatform.MetaXRSimulator:
-                        // not enable for any platform
-                        break;
                     default:
                         throw new ArgumentException("Attempted EnablePluginPackage() for unsupported BuildTarget: " +
                                                     platform);
@@ -550,7 +539,7 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
     }
 
     private static readonly string autoUpdateEnabledKey =
-        "Oculus_Utilities_OVRPluginUpdater_AutoUpdate_" + OVRManager.utilitiesVersion;
+        "Oculus_Utilities_OVRPluginUpdater_AutoUpdate2_" + OVRManager.utilitiesVersion;
 
     private static bool autoUpdateEnabled
     {
@@ -995,7 +984,6 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
             else
             {
                 // if there's no current valid version, update it automatically
-                autoUpdateEnabled = false;
                 userAcceptsUpdate = true;
             }
         }
@@ -1063,7 +1051,7 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
         }
     }
 
-    #region IOVRPluginInfoSupplier Implementation
+#region IOVRPluginInfoSupplier Implementation
 
     // Test if the OVRPlugin/OpenXR plugin is currently activated, used by other editor utilities
     public bool IsOVRPluginOpenXRActivated() => IsOVRPluginOpenXRActivatedInternal();
@@ -1085,7 +1073,7 @@ public class OVRPluginUpdater : IOVRPluginInfoSupplier
         return enabledUtilsPluginPkg != null && enabledUtilsPluginPkg.IsBundledPluginPackage();
     }
 
-    #endregion
+#endregion
 }
 
 #endif

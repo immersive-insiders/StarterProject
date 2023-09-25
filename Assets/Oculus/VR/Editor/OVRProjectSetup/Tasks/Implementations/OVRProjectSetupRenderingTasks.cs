@@ -310,7 +310,9 @@ internal static class OVRProjectSetupRenderingTasks
             isDone: buildTargetGroup =>
                 ForEachRendererData(rd =>
                 {
-                    return rd.rendererFeatures.Count == 0 || !rd.rendererFeatures.Any(feature => feature.isActive && feature.GetType().Name == "ScreenSpaceAmbientOcclusion");
+                    return rd.rendererFeatures.Count == 0
+                        || !rd.rendererFeatures.Any(
+                            feature => feature != null && (feature.isActive && feature.GetType().Name == "ScreenSpaceAmbientOcclusion"));
                 }),
             message: "SSAO will have some performace impact, it is recommended to disable SSAO",
             fix: buildTargetGroup =>
@@ -318,7 +320,7 @@ internal static class OVRProjectSetupRenderingTasks
                 {
                     rd.rendererFeatures.ForEach(feature =>
                         {
-                            if (feature.GetType().Name == "ScreenSpaceAmbientOcclusion")
+                            if (feature != null && feature.GetType().Name == "ScreenSpaceAmbientOcclusion")
                                 feature.SetActive(false);
                         }
                     );

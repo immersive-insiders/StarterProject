@@ -6,30 +6,70 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Remoting.Contexts;
+using System.Threading;
 using Meta.Voice.Hub;
 using Meta.Voice.Hub.Attributes;
+using Meta.Voice.Hub.Utilities;
+using Meta.Voice.TelemetryUtilities;
 using UnityEditor;
 
 namespace Meta.Voice.VSDKHub
 {
     [MetaHubContext(VoiceHubConstants.CONTEXT_VOICE)]
-    public class VoiceSDKHub : MetaHubContext
+    public class VoiceSDKHubContext : MetaHubContext
     {
-        [MenuItem("Oculus/Voice SDK/Voice Hub", false, 1)]
-        private static void ShowWindow()
+    }
+    
+    public class VoiceSDKHub : MetaHub
+    {
+        public static readonly List<string> Contexts = new List<string>
         {
-            MetaHub.ShowWindow<MetaHub>(VoiceHubConstants.CONTEXT_VOICE);
-        }
+            VoiceHubConstants.CONTEXT_VOICE
+        };
 
-        public static void ShowPage(string page)
+        private List<string> _vsdkContexts;
+        public override List<string> ContextFilter
         {
-            var window = MetaHub.ShowWindow<MetaHub>(VoiceHubConstants.CONTEXT_VOICE);
-            window.SelectedPage = page;
+            get
+            {
+                if (null == _vsdkContexts || _vsdkContexts.Count == 0)
+                {
+                    _vsdkContexts = Contexts.ToList();
+                    AddChildContexts(_vsdkContexts);
+                }
+
+                return _vsdkContexts;
+            }
         }
 
         public static string GetPageId(string pageName)
         {
             return VoiceHubConstants.CONTEXT_VOICE + "::" + pageName;
+        }
+        
+        [MenuItem("Oculus/Voice SDK/Voice Hub", false, 1)]
+        private static void ShowWindow()
+        {
+            MetaHub.ShowWindow<VoiceSDKHub>(Contexts.ToArray());
+        }
+
+        public static void ShowPage(string page)
+        {
+            Telemetry.LogInstantEvent(Telemetry.TelemetryEventId.OpenUi, new Dictionary<Telemetry.AnnotationKey, string>()
+                {
+                    {Telemetry.AnnotationKey.PageId, page}
+                });
+            var window = MetaHub.ShowWindow<VoiceSDKHub>(Contexts.ToArray());
+            window.SelectedPage = page;
+        }
+
+        protected override void OnEnable()
+        {
+            _vsdkContexts = null;
+            base.OnEnable();
         }
     }
 }

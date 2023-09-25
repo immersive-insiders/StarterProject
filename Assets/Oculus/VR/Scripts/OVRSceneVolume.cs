@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -107,13 +107,15 @@ public class OVRSceneVolume : MonoBehaviour, IOVRSceneComponent
         }
     }
 
-    [Tooltip("When enabled, scales the child transforms according to the dimensions of this volume.")]
+    [Tooltip("When enabled, scales the child transforms according to the dimensions of this volume. " +
+        "If both Volume and Plane components exist on the game object, the volume takes precedence.")]
     [SerializeField]
-    private bool _scaleChildren = true;
+    internal bool _scaleChildren = true;
 
-    [Tooltip("When enabled, offsets the child transforms according to the offset of this volume.")]
+    [Tooltip("When enabled, offsets the child transforms according to the offset of this volume. " +
+        "If both Volume and Plane components exist on the game object, the volume takes precedence.")]
     [SerializeField]
-    private bool _offsetChildren = false;
+    internal bool _offsetChildren = false;
 
     private OVRSceneAnchor _sceneAnchor;
 
@@ -176,10 +178,10 @@ public class OVRSceneVolume : MonoBehaviour, IOVRSceneComponent
             // calculate the offset as the difference between the
             // volume pivot and anchor pivot, in Unity coordinate system
             var anchorPivot = transform.position;
-            var minPoint = transform.TransformPoint(bounds.Pos.FromVector3f());
             var maxPoint = transform.TransformPoint(
                 bounds.Pos.FromVector3f() + bounds.Size.FromSize3f());
-            var volumePivot = Vector3.Lerp(minPoint, maxPoint, 0.5f);
+            var volumePivot = transform.TransformPoint(
+                bounds.Pos.FromVector3f() + (bounds.Size.FromSize3f() / 2));
             volumePivot.y = maxPoint.y;
 
             Offset = new Vector3(
@@ -189,7 +191,7 @@ public class OVRSceneVolume : MonoBehaviour, IOVRSceneComponent
 
             OVRSceneManager.Development.Log(nameof(OVRSceneVolume),
                 $"[{_sceneAnchor.Uuid}] Volume has dimensions {Dimensions} " +
-                $"and offset {Offset}.");
+                $"and offset {Offset}.", gameObject);
 
             if (ScaleChildren)
                 SetChildScale();
@@ -199,7 +201,8 @@ public class OVRSceneVolume : MonoBehaviour, IOVRSceneComponent
         else
         {
             OVRSceneManager.Development.LogError(nameof(OVRSceneVolume),
-                $"[{_sceneAnchor.Space}] Failed to retrieve volume's information.");
+                $"[{_sceneAnchor.Space}] Failed to retrieve volume's information.",
+                gameObject);
         }
     }
 }

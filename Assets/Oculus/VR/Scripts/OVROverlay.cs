@@ -209,7 +209,9 @@ public class OVROverlay : MonoBehaviour
         "When checked, the layer will use efficient sharpen.")]
     public bool useEfficientSharpen = false;
 
-
+    [Tooltip(
+        "When checked, The runtime automatically chooses the appropriate sharpening or super sampling filter")]
+    public bool useAutomaticFiltering = false;
 
     /// <summary>
     /// Preview the overlay in the editor using a mesh renderer.
@@ -574,8 +576,8 @@ public class OVROverlay : MonoBehaviour
                 {
 #if UNITY_EDITOR
                     var assetPath = UnityEditor.AssetDatabase.GetAssetPath(textures[i]);
-                    var importer = (UnityEditor.TextureImporter)UnityEditor.TextureImporter.GetAtPath(assetPath);
-                    if (importer && importer.textureType != UnityEditor.TextureImporterType.Default)
+                    var importer = UnityEditor.AssetImporter.GetAtPath(assetPath) as UnityEditor.TextureImporter;
+                    if (importer != null && importer.textureType != UnityEditor.TextureImporterType.Default)
                     {
                         Debug.LogError("Need Default Texture Type for overlay");
                         return false;
@@ -769,10 +771,11 @@ public class OVROverlay : MonoBehaviour
             // OpenGL does not support copy texture between different format
             bool isOpenGL = SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3 ||
                             SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.OpenGLES2;
-            // Graphics.CopyTexture only works when textures are same size
+            // Graphics.CopyTexture only works when textures are same size and same mipmap count
             bool isSameSize = et.width == textures[eyeId].width && et.height == textures[eyeId].height;
+            bool sameMipMap = textures[eyeId].mipmapCount == et.mipmapCount;
 
-            bool bypassBlit = Application.isMobilePlatform && !isOpenGL && isSameSize;
+            bool bypassBlit = Application.isMobilePlatform && !isOpenGL && isSameSize && sameMipMap;
             if (bypassBlit)
             {
                 Graphics.CopyTexture(textures[eyeId], et);
@@ -860,14 +863,34 @@ public class OVROverlay : MonoBehaviour
             UpdateTextureRectMatrix();
         }
 
+        bool internalUseEfficientSharpen = useEfficientSharpen;
+        bool internalUseEfficientSupersample = useEfficientSupersample;
+
+        // No sharpening or supersampling method was selected, defaulting to efficient supersampling and efficient sharpening.
+        if (useAutomaticFiltering && !(useEfficientSharpen || useEfficientSupersample || useExpensiveSharpen || useExpensiveSuperSample))
+        {
+            internalUseEfficientSharpen = true;
+            internalUseEfficientSupersample = true;
+        }
+
+        if (!useAutomaticFiltering && ((useEfficientSharpen && useEfficientSupersample)
+           || (useExpensiveSharpen && useExpensiveSuperSample)
+           || (useEfficientSharpen && useExpensiveSuperSample)
+           || (useExpensiveSharpen && useEfficientSupersample)))
+        {
+
+            Debug.LogError("Warning-XR sharpening and supersampling cannot be enabled simultaneously, either enable autofiltering or disable one of the options");
+            return false;
+        }
+
         bool noTextures = isExternalSurface || !NeedsTexturesForShape(currentOverlayShape);
         bool isOverlayVisible = OVRPlugin.EnqueueSubmitLayer(overlay, headLocked, noDepthBufferTesting,
             noTextures ? System.IntPtr.Zero : layerTextures[0].appTexturePtr,
             noTextures ? System.IntPtr.Zero : layerTextures[rightEyeIndex].appTexturePtr, layerId, frameIndex,
             pose.flipZ().ToPosef_Legacy(), scale.ToVector3f(), layerIndex, (OVRPlugin.OverlayShape)currentOverlayShape,
             overrideTextureRectMatrix, textureRectMatrix, overridePerLayerColorScaleAndOffset, colorScale, colorOffset,
-            useExpensiveSuperSample, useBicubicFiltering, useEfficientSupersample,
-            useEfficientSharpen, useExpensiveSharpen, hidden, isProtectedContent
+            useExpensiveSuperSample, useBicubicFiltering, internalUseEfficientSupersample,
+            internalUseEfficientSharpen, useExpensiveSharpen, hidden, isProtectedContent, useAutomaticFiltering
         );
         prevOverlayShape = currentOverlayShape;
 
@@ -1219,7 +1242,6 @@ public class OVROverlay : MonoBehaviour
 
         bool createdLayer = CreateLayer(newDesc.MipLevels, newDesc.SampleCount, newDesc.Format, newDesc.LayerFlags,
             newDesc.TextureSize, newDesc.Shape);
-
 
         if (layerIndex == -1 || layerId <= 0)
         {

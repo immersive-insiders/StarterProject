@@ -31,6 +31,9 @@ using Node = UnityEngine.XR.XRNode;
 /// </summary>
 public static class OVRInput
 {
+    // dotnet-format does not yet support columnar formatting
+    // (https://github.com/dotnet/roslyn/issues/28729)
+    #pragma warning disable format
     [Flags]
     /// Virtual button mappings that allow the same input bindings to work across different controllers.
     public enum Button
@@ -189,6 +192,8 @@ public static class OVRInput
         SecondaryIndexTriggerSlide = 0x200,
         SecondaryThumbRestForce    = 0x400,
         SecondaryStylusForce       = 0x800,
+        PrimaryIndexTriggerForce   = 0x1000,
+        SecondaryIndexTriggerForce = 0x2000,
         Any                       = ~None, ///< Maps to RawAxis1D: [Gamepad, Touch, LTouch, RTouch: Any], [Remote: None]
     }
 
@@ -209,6 +214,8 @@ public static class OVRInput
         RIndexTriggerSlide        = 0x200,
         RThumbRestForce           = 0x400,
         RStylusForce              = 0x800,
+        LIndexTriggerForce        = 0x1000,
+        RIndexTriggerForce        = 0x2000,
         Any                       = ~None, ///< Maps to Physical Axis1D: [Gamepad, Touch, LTouch, RTouch: Any], [Remote: None]
     }
 
@@ -283,6 +290,7 @@ public static class OVRInput
         None                      = OVRPlugin.InteractionProfile.None,
         Touch                     = OVRPlugin.InteractionProfile.Touch,
         TouchPro                  = OVRPlugin.InteractionProfile.TouchPro,
+        TouchPlus                 = OVRPlugin.InteractionProfile.TouchPlus,
     }
 
     public enum Hand
@@ -292,6 +300,23 @@ public static class OVRInput
         HandRight                 = OVRPlugin.Hand.HandRight,
     }
 
+    #pragma warning disable format
+
+    public enum InputDeviceShowState
+    {
+        Always,
+        ControllerInHandOrNoHand,
+        ControllerInHand,
+        ControllerNotInHand,
+        NoHand,
+    }
+
+    public enum ControllerInHandState
+    {
+        NoHand,
+        ControllerInHand,
+        ControllerNotInHand,
+    }
 
     public struct HapticsAmplitudeEnvelopeVibration
     {
@@ -428,6 +453,9 @@ public static class OVRInput
         }
 
         bool UsePluginActiveAndConnectedControllers = (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus && pluginSupportsActiveController);
+        if(OVRManager.instance != null && OVRManager.instance.IsSimultaneousHandsAndControllersSupported) {
+            UsePluginActiveAndConnectedControllers = OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus;
+        }
 
         if (UsePluginActiveAndConnectedControllers)
         {
@@ -560,7 +588,71 @@ public static class OVRInput
         }
     }
 
+	/// <summary>
+	/// Returns a flag indicating whether or not the hand poses are controlled by controller data
+	/// </summary>
+	public static bool AreHandPosesGeneratedByControllerData(OVRPlugin.Step stepId, OVRInput.Hand hand)
+	{
+        switch (hand)
+        {
+            case Hand.HandLeft:
+                return OVRPlugin.AreHandPosesGeneratedByControllerData(stepId, OVRPlugin.Node.HandLeft);
+			case Hand.HandRight:
+                return OVRPlugin.AreHandPosesGeneratedByControllerData(stepId, OVRPlugin.Node.HandRight);
+			default:
+				return false;
+		}
+	}
 
+    /// <summary>
+    /// Switch to simultaneous hands and controllers mode on device
+    /// </summary>
+    public static bool EnableSimultaneousHandsAndControllers()
+	{
+        return OVRPlugin.SetSimultaneousHandsAndControllersEnabled(true);
+    }
+
+    /// <summary>
+    /// Switch back from simultaneous hands and controllers mode to the app config-specified mono-modality mode on device
+    /// </summary>
+    public static bool DisableSimultaneousHandsAndControllers()
+	{
+        return OVRPlugin.SetSimultaneousHandsAndControllersEnabled(false);
+    }
+
+	/// <summary>
+	/// Returns a flag indicating whether or not the controller is held.
+	/// </summary>
+	public static ControllerInHandState GetControllerIsInHandState(OVRInput.Hand hand)
+	{
+        switch (hand)
+        {
+            case Hand.HandLeft:
+                if ((connectedControllerTypes & Controller.LHand) != 0){
+                    bool controllerInHand = OVRPlugin.GetControllerIsInHand(OVRPlugin.Step.Render, OVRPlugin.Node.ControllerLeft);
+                    if(controllerInHand){
+                        return ControllerInHandState.ControllerInHand;
+                    } else {
+                        return ControllerInHandState.ControllerNotInHand;
+                    }
+                } else {
+                    return ControllerInHandState.NoHand;
+                }
+            case Hand.HandRight:
+                if ((connectedControllerTypes & Controller.RHand) != 0){
+                    bool controllerInHand = OVRPlugin.GetControllerIsInHand(OVRPlugin.Step.Render, OVRPlugin.Node.ControllerRight);
+                    if(controllerInHand){
+                        return ControllerInHandState.ControllerInHand;
+                    } else {
+                        return ControllerInHandState.ControllerNotInHand;
+                    }
+                } else {
+                    return ControllerInHandState.NoHand;
+                }
+            default:
+                return ControllerInHandState.NoHand;
+        }
+    }
 
     /// <summary>
     /// Gets the active controller type for the given handedness
@@ -710,9 +802,10 @@ public static class OVRInput
     }
 
     /// <summary>
-    /// Gets the linear acceleration of the given Controller local to its tracking space.
+    /// (Deprecated) Gets the linear acceleration of the given Controller local to its tracking space.
     /// Only supported for Oculus LTouch and RTouch controllers. Non-tracked controllers will return Vector3.zero.
     /// </summary>
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     public static Vector3 GetLocalControllerAcceleration(OVRInput.Controller controllerType)
     {
         Vector3 accel = Vector3.zero;
@@ -802,11 +895,11 @@ public static class OVRInput
                 if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)
                     return OVRPlugin.GetNodePose(OVRPlugin.Node.ControllerRight, stepType).ToOVRPose().orientation;
                 else if (OVRManager.loadedXRDevice == OVRManager.XRDevice.OpenVR)
-                    return openVRControllerDetails[0].localOrientation;
+                    return openVRControllerDetails[1].localOrientation;
                 else
                 {
                     Quaternion retQuat;
-                    if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.LeftHand,
+                    if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.RightHand,
                             NodeStatePropertyType.Orientation, OVRPlugin.Node.ControllerRight, stepType, out retQuat))
                         return retQuat;
                     return Quaternion.identity;
@@ -885,9 +978,10 @@ public static class OVRInput
     }
 
     /// <summary>
-    /// Gets the angular acceleration of the given Controller local to its tracking space in radians per second per second around each axis.
+    /// (Deprecated) Gets the angular acceleration of the given Controller local to its tracking space in radians per second per second around each axis.
     /// Only supported for Oculus LTouch and RTouch controllers. Non-tracked controllers will return Vector3.zero.
     /// </summary>
+    [System.Obsolete("Deprecated. Acceleration is not supported in OpenXR", false)]
     public static Vector3 GetLocalControllerAngularAcceleration(OVRInput.Controller controllerType)
     {
         Vector3 accel = Vector3.zero;
@@ -1540,6 +1634,17 @@ public static class OVRInput
                     float axis = controller.currentState.RStylusForce;
                     maxAxis = CalculateAbsMax(maxAxis, axis);
                 }
+                if ((RawAxis1D.LIndexTriggerForce & resolvedMask) != 0)
+                {
+                    float axis = controller.currentState.LIndexTriggerForce;
+                    maxAxis = CalculateAbsMax(maxAxis, axis);
+                }
+
+                if ((RawAxis1D.RIndexTriggerForce & resolvedMask) != 0)
+                {
+                    float axis = controller.currentState.RIndexTriggerForce;
+                    maxAxis = CalculateAbsMax(maxAxis, axis);
+                }
             }
         }
 
@@ -2072,6 +2177,10 @@ public static class OVRInput
         return isValid;
     }
 
+    // dotnet-format does not yet support columnar formatting
+    // (https://github.com/dotnet/roslyn/issues/28729)
+    #pragma warning disable format
+
     private abstract class OVRControllerBase
     {
         public class VirtualButtonMap
@@ -2281,7 +2390,8 @@ public static class OVRInput
             public RawAxis1D SecondaryIndexTriggerSlide = RawAxis1D.None;
             public RawAxis1D SecondaryThumbRestForce    = RawAxis1D.None;
             public RawAxis1D SecondaryStylusForce       = RawAxis1D.None;
-
+            public RawAxis1D PrimaryIndexTriggerForce   = RawAxis1D.None;
+            public RawAxis1D SecondaryIndexTriggerForce = RawAxis1D.None;
             public RawAxis1D ToRawMask(Axis1D virtualMask)
             {
                 RawAxis1D rawMask = 0;
@@ -2313,6 +2423,10 @@ public static class OVRInput
                     rawMask |= SecondaryThumbRestForce;
                 if ((virtualMask & Axis1D.SecondaryStylusForce) != 0)
                     rawMask |= SecondaryStylusForce;
+                if ((virtualMask & Axis1D.SecondaryIndexTriggerForce) != 0)
+                    rawMask |= SecondaryIndexTriggerForce;
+                if ((virtualMask & Axis1D.PrimaryIndexTriggerForce) != 0)
+                    rawMask |= PrimaryIndexTriggerForce;
 
                 return rawMask;
             }
@@ -2352,8 +2466,8 @@ public static class OVRInput
         public VirtualNearTouchMap nearTouchMap = new VirtualNearTouchMap();
         public VirtualAxis1DMap axis1DMap = new VirtualAxis1DMap();
         public VirtualAxis2DMap axis2DMap = new VirtualAxis2DMap();
-        public OVRPlugin.ControllerState5 previousState = new OVRPlugin.ControllerState5();
-        public OVRPlugin.ControllerState5 currentState = new OVRPlugin.ControllerState5();
+        public OVRPlugin.ControllerState6 previousState = new OVRPlugin.ControllerState6();
+        public OVRPlugin.ControllerState6 currentState = new OVRPlugin.ControllerState6();
         public bool shouldApplyDeadzone = true;
 
         public OVRControllerBase()
@@ -2367,12 +2481,12 @@ public static class OVRInput
 
         public virtual Controller Update()
         {
-            OVRPlugin.ControllerState5 state;
+            OVRPlugin.ControllerState6 state;
 
             if (OVRManager.loadedXRDevice == OVRManager.XRDevice.OpenVR && ((controllerType & Controller.Touch) != 0))
                 state = GetOpenVRControllerState(controllerType);
             else
-                state = OVRPlugin.GetControllerState5((uint)controllerType);
+                state = OVRPlugin.GetControllerState6((uint)controllerType);
 
             if (state.LIndexTrigger >= AXIS_AS_BUTTON_THRESHOLD)
                 state.Buttons |= (uint)RawButton.LIndexTrigger;
@@ -2406,9 +2520,9 @@ public static class OVRInput
             return ((Controller)currentState.ConnectedControllers & controllerType);
         }
 
-        private OVRPlugin.ControllerState5 GetOpenVRControllerState(Controller controllerType)
+        private OVRPlugin.ControllerState6 GetOpenVRControllerState(Controller controllerType)
         {
-            OVRPlugin.ControllerState5 state = new OVRPlugin.ControllerState5();
+            OVRPlugin.ControllerState6 state = new OVRPlugin.ControllerState6();
 
             if ((controllerType & Controller.LTouch) == Controller.LTouch &&
                 IsValidOpenVRDevice(openVRControllerDetails[0].deviceID))
@@ -2683,6 +2797,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.RIndexTriggerSlide;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.RThumbRestForce;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.RStylusForce;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.LIndexTriggerForce;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.RIndexTriggerForce;
         }
 
         public override void ConfigureAxis2DMap()
@@ -2789,6 +2905,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.LIndexTriggerForce;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -2891,6 +3009,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.RIndexTriggerForce;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -2993,6 +3113,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.None;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -3099,6 +3221,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.None;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -3201,6 +3325,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.None;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -3303,6 +3429,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.None;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -3400,6 +3528,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.None;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -3497,6 +3627,8 @@ public static class OVRInput
             axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
             axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
             axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
+            axis1DMap.PrimaryIndexTriggerForce   = RawAxis1D.None;
+            axis1DMap.SecondaryIndexTriggerForce = RawAxis1D.None;
         }
 
         public override void ConfigureAxis2DMap()
@@ -3508,4 +3640,6 @@ public static class OVRInput
             axis2DMap.SecondaryTouchpad         = RawAxis2D.None;
         }
     }
+
+    #pragma warning restore format
 }

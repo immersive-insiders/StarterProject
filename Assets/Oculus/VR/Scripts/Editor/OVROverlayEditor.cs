@@ -48,6 +48,9 @@ public class OVROverlayEditor : Editor
         Half = 2,
     }
 
+    private OVRPlugin.LayerSuperSamplingType superSampleType = OVRPlugin.LayerSuperSamplingType.None;
+    private OVRPlugin.LayerSharpenType sharpenType = OVRPlugin.LayerSharpenType.None;
+
     private bool sourceRectsVisible = false;
     private bool destRectsVisible = false;
 
@@ -134,8 +137,6 @@ public class OVROverlayEditor : Editor
 
     private SerializedProperty _propUseLegacyCubemapRotation;
     private SerializedProperty _propUseBicubicFiltering;
-    private SerializedProperty _propUseEfficientSupersample;
-    private SerializedProperty _propUseEfficientSharpen;
     private SerializedProperty _propIsExternalSurface;
     private SerializedProperty _propExternalSurfaceWidth;
     private SerializedProperty _propExternalSurfaceHeight;
@@ -147,6 +148,7 @@ public class OVROverlayEditor : Editor
     private SerializedProperty _propColorScale;
     private SerializedProperty _propColorOffset;
     private SerializedProperty _propPreviewInEditor;
+    private SerializedProperty _propUseAutoFiltering;
 
 
     private void Awake()
@@ -175,8 +177,6 @@ public class OVROverlayEditor : Editor
         _propCurrentOverlayShape = serializedObject.FindProperty(nameof(OVROverlay.currentOverlayShape));
         _propUseLegacyCubemapRotation = serializedObject.FindProperty(nameof(OVROverlay.useLegacyCubemapRotation));
         _propUseBicubicFiltering = serializedObject.FindProperty(nameof(OVROverlay.useBicubicFiltering));
-        _propUseEfficientSupersample = serializedObject.FindProperty(nameof(OVROverlay.useEfficientSupersample));
-        _propUseEfficientSharpen = serializedObject.FindProperty(nameof(OVROverlay.useEfficientSharpen));
         _propIsExternalSurface = serializedObject.FindProperty(nameof(OVROverlay.isExternalSurface));
         _propExternalSurfaceWidth = serializedObject.FindProperty(nameof(OVROverlay.externalSurfaceWidth));
         _propExternalSurfaceHeight = serializedObject.FindProperty(nameof(OVROverlay.externalSurfaceHeight));
@@ -189,6 +189,7 @@ public class OVROverlayEditor : Editor
         _propColorScale = serializedObject.FindProperty(nameof(OVROverlay.colorScale));
         _propColorOffset = serializedObject.FindProperty(nameof(OVROverlay.colorOffset));
         _propPreviewInEditor = serializedObject.FindProperty(nameof(OVROverlay._previewInEditor));
+        _propUseAutoFiltering = serializedObject.FindProperty(nameof(OVROverlay.useAutomaticFiltering));
 
     }
 
@@ -205,8 +206,12 @@ public class OVROverlayEditor : Editor
         bool tmpEnableDepthBufferTest = !_propNoDepthBufferTesting.boolValue;
 
         EditorGUILayout.LabelField("Display Order", EditorStyles.boldLabel);
+
+        GUI.enabled = Application.isEditor && !Application.isPlaying;
         EditorGUILayout.PropertyField(_propCurrentOverlayType,
             new GUIContent("Overlay Type", "Whether this overlay should layer behind the scene or in front of it"));
+        GUI.enabled = true;
+
         EditorGUILayout.PropertyField(_propCompositionDepth, new GUIContent("Composition Depth",
             "Depth value used to sort OVROverlays in the scene, smaller value appears in front"));
         tmpEnableDepthBufferTest = EditorGUILayout.Toggle(new GUIContent("Enable Depth Buffer Testing",
@@ -257,12 +262,32 @@ public class OVROverlayEditor : Editor
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Layer Properties", EditorStyles.boldLabel);
 
-            EditorGUILayout.PropertyField(_propUseBicubicFiltering, new GUIContent("Bicubic Filtering",
-                "Whether this layer should use bicubic filtering. This can increase quality for small details on text and icons being viewed at farther distances."));
-            EditorGUILayout.PropertyField(_propUseEfficientSupersample, new GUIContent("Super Sample",
-                "Whether this layer should use an efficient super sample filter. This can help reduce flicker artifacts."));
-            EditorGUILayout.PropertyField(_propUseEfficientSharpen, new GUIContent("Sharpen",
-                "Whether this layer should use a sharpen filter. This amplifies contrast and fine details"));
+        EditorGUILayout.PropertyField(_propUseAutoFiltering, new GUIContent("Auto Filtering",
+            "Whether this layer allows the runtime to automatically apply layer filter (Sharpen or Supersampling) to improve visual quality"));
+        EditorGUILayout.PropertyField(_propUseBicubicFiltering, new GUIContent("Bicubic Filtering",
+            "Whether this layer should use bicubic filtering. This can increase quality for small details on text and icons being viewed at farther distances."));
+
+        bool hasModified = false;
+        if (overlay.useEfficientSupersample)
+            superSampleType = OVRPlugin.LayerSuperSamplingType.Normal;
+        if (overlay.useExpensiveSuperSample)
+            superSampleType = OVRPlugin.LayerSuperSamplingType.Quality;
+
+        if (overlay.useEfficientSharpen)
+            sharpenType = OVRPlugin.LayerSharpenType.Normal;
+        if (overlay.useExpensiveSharpen)
+            sharpenType = OVRPlugin.LayerSharpenType.Quality;
+
+        OVREditorUtil.SetupEnumField(target, new GUIContent("Super Sample", "The super sample filter of this layer. This can help reduce flicker artifacts."), ref superSampleType, ref hasModified);
+        OVREditorUtil.SetupEnumField(target, new GUIContent("Sharpen", "The sharpen filter of this layer. This amplifies contrast and fine details."), ref sharpenType, ref hasModified);
+        if (hasModified)
+        {
+            overlay.useEfficientSupersample = superSampleType == OVRPlugin.LayerSuperSamplingType.Normal;
+            overlay.useExpensiveSuperSample = superSampleType == OVRPlugin.LayerSuperSamplingType.Quality;
+
+            overlay.useEfficientSharpen = sharpenType == OVRPlugin.LayerSharpenType.Normal;
+            overlay.useExpensiveSharpen = sharpenType == OVRPlugin.LayerSharpenType.Quality;
+        }
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Textures", EditorStyles.boldLabel);
