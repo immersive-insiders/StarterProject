@@ -2,7 +2,7 @@
 A baseline repository for VR development using Oculus(Meta) Integration SDK
 
 Repository Details:
-- Unity version [2021.3.26f1](https://unity.com/releases/editor/qa/lts-releases)
+- Unity version [2022.3.13f1](https://unity.com/releases/editor/qa/lts-releases)
 - [Meta XR All-in-One SDK v60](https://assetstore.unity.com/packages/tools/integration/meta-xr-all-in-one-sdk-269657)
     - Meta XR Core SDK
     - Meta MR Utility Kit
