@@ -1,5 +1,15 @@
 {
   "dependencies": {
+    "com.meta.movement": {
+      "version": "https://github.com/oculus-samples/Unity-Movement.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.textmeshpro": "3.0.6",
+        "com.unity.animation.rigging": "1.2.1"
+      },
+      "hash": "61620c8af1d3b1b796cef0edd90531345de64823"
+    },
     "com.meta.xr.depthapi": {
       "version": "https://github.com/oculus-samples/Unity-DepthAPI.git?path=/Packages/com.meta.xr.depthapi",
       "depth": 0,
@@ -164,6 +174,25 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.animation.rigging": {
+      "version": "1.2.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.burst": "1.4.1",
+        "com.unity.test-framework": "1.1.24"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.burst": {
+      "version": "1.8.9",
+      "depth": 2,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.mathematics": "1.2.1"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.collab-proxy": {
       "version": "2.2.0",
       "depth": 0,
@@ -220,6 +249,13 @@
     "com.unity.ide.vscode": {
       "version": "1.2.5",
       "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.mathematics": {
+      "version": "1.2.6",
+      "depth": 3,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
