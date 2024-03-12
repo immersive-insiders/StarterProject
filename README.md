@@ -9,11 +9,18 @@ Repository Details:
     - Meta Interaction SDK
     - Meta Haptics SDK
     - Meta XR Platform SDK
-    - Mata XR Audio SDK
     - Meta XR Simulator
-    - Voice SDK
+    - Meta XR SDK Shared Assets
+    - Mata XR Audio SDK v60
+    - Voice SDK v60
 - [Meta XR Interaction SDK OVR Samples v62](https://assetstore.unity.com/packages/tools/integration/meta-xr-interaction-sdk-ovr-samples-268521)
+- [Meta Depth API v60.0.0](https://github.com/oculus-samples/Unity-DepthAPI)
+- [Meta Movmeent SDK v4.3.0](https://github.com/oculus-samples/Unity-Movement)
 
 Project details:
 - The project uses 3D render pipeline.
 - The Build settings have already been configured such that the built app can run on the Oculus Quest devices.
+- All the examples scenes can be found under the Assets/Samples folder
+
+NOTE:
+Make sure to change the Company Name and Product Name under player settings.
