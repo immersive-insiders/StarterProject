@@ -15,7 +15,7 @@ Repository Details:
     - Voice SDK v60
 - [Meta XR Interaction SDK OVR Samples v62](https://assetstore.unity.com/packages/tools/integration/meta-xr-interaction-sdk-ovr-samples-268521)
 - [Meta Depth API v60.0.0](https://github.com/oculus-samples/Unity-DepthAPI)
-- [Meta Movmeent SDK v4.3.0](https://github.com/oculus-samples/Unity-Movement)
+- [Meta Movement SDK v4.3.0](https://github.com/oculus-samples/Unity-Movement)
 
 Project details:
 - The project uses 3D render pipeline.
