@@ -1,5 +1,5 @@
 # OculusMetaIntegration_BaseProject
-A baseline repository for VR development using Oculus(Meta) Integration SDK
+A baseline repository for VR development using Oculus(Meta) SDK
 
 Repository Details:
 - Unity version [2022.3.13f1](https://unity.com/releases/editor/qa/lts-releases)
@@ -20,7 +20,7 @@ Repository Details:
 Project details:
 - The project uses 3D render pipeline.
 - The Build settings have already been configured such that the built app can run on the Oculus Quest devices.
-- All the examples scenes can be found under the Assets/Samples folder
+- All the examples scenes can be found under the Assets/Samples folder.
 
 NOTE:
 Make sure to change the Company Name and Product Name under player settings.
