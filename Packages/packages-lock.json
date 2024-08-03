@@ -1,19 +1,5 @@
 {
   "dependencies": {
-    "com.meta.movement": {
-      "version": "https://github.com/oculus-samples/Unity-Movement.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.meta.xr.sdk.core": "63.0.0",
-        "com.meta.xr.sdk.interaction": "63.0.0",
-        "com.meta.xr.sdk.interaction.ovr": "63.0.0",
-        "com.unity.textmeshpro": "3.0.6",
-        "com.unity.animation.rigging": "1.2.1",
-        "com.unity.burst": "1.4.1"
-      },
-      "hash": "e4d0be44e97e3086ae7ad8c1522469d85ed1c2c5"
-    },
     "com.meta.xr.depthapi": {
       "version": "https://github.com/oculus-samples/Unity-DepthAPI.git?path=/Packages/com.meta.xr.depthapi",
       "depth": 0,
@@ -21,62 +7,62 @@
       "dependencies": {
         "com.unity.xr.oculus": "4.2.0"
       },
-      "hash": "a9976da6cb3fbc5631ce002eb17b6cfc69d7d1e6"
+      "hash": "ae4c6e30122c0624e965434c750ee389cd172bc8"
     },
     "com.meta.xr.mrutilitykit": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.meta.xr.sdk.core": "65.0.0",
         "com.unity.ai.navigation": "1.1.4",
         "com.unity.nuget.newtonsoft-json": "3.0.2",
+        "com.meta.xr.sdk.core": "67.0.0",
         "com.unity.textmeshpro": "3.0.6"
       },
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.all": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.meta.xr.mrutilitykit": "65.0.0",
-        "com.meta.xr.sdk.audio": "65.0.0",
-        "com.meta.xr.sdk.core": "65.0.0",
-        "com.meta.xr.sdk.haptics": "65.0.0",
-        "com.meta.xr.sdk.interaction": "65.0.0",
-        "com.meta.xr.sdk.interaction.ovr": "65.0.0",
-        "com.meta.xr.sdk.platform": "65.0.0",
-        "com.meta.xr.sdk.voice": "65.0.0",
-        "com.meta.xr.simulator": "65.0.0"
+        "com.meta.xr.sdk.audio": "67.0.0",
+        "com.meta.xr.sdk.interaction": "67.0.0",
+        "com.meta.xr.sdk.interaction.ovr": "67.0.1",
+        "com.meta.xr.sdk.platform": "67.0.0",
+        "com.meta.xr.sdk.core": "67.0.0",
+        "com.meta.xr.sdk.voice": "67.0.0",
+        "com.meta.xr.sdk.haptics": "67.0.0",
+        "com.meta.xr.simulator": "66.0.1",
+        "com.meta.xr.mrutilitykit": "67.0.0"
       },
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.audio": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.core": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.haptics": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.meta.xr.sdk.core": "65.0.0"
+        "com.meta.xr.sdk.core": "67.0.0"
       },
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.interaction": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -86,54 +72,33 @@
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.interaction.ovr": {
-      "version": "65.0.0",
+      "version": "67.0.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.meta.xr.sdk.core": "65.0.0",
-        "com.meta.xr.sdk.interaction": "65.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
-    "com.meta.xr.sdk.interaction.ovr.samples": {
-      "version": "65.0.0",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.meta.xr.sdk.interaction.ovr": "65.0.0",
-        "com.meta.xr.sdk.sharedassets": "65.0.0"
+        "com.meta.xr.sdk.interaction": "67.0.0",
+        "com.meta.xr.sdk.core": "67.0.0"
       },
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.platform": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.meta.xr.sdk.core": "65.0.0",
-        "com.unity.ugui": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
-    "com.meta.xr.sdk.sharedassets": {
-      "version": "65.0.0",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.textmeshpro": "3.0.6",
         "com.unity.ugui": "1.0.0"
       },
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.sdk.voice": {
-      "version": "65.0.0",
+      "version": "67.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.meta.xr.simulator": {
-      "version": "65.0.0",
+      "version": "66.0.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -148,27 +113,8 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.animation.rigging": {
-      "version": "1.2.1",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.burst": "1.4.1",
-        "com.unity.test-framework": "1.1.24"
-      },
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.burst": {
-      "version": "1.8.9",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.mathematics": "1.2.1"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.collab-proxy": {
-      "version": "2.2.0",
+      "version": "2.3.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -194,16 +140,16 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.ide.visualstudio": "2.0.22",
-        "com.unity.ide.rider": "3.0.26",
+        "com.unity.ide.rider": "3.0.28",
         "com.unity.ide.vscode": "1.2.5",
         "com.unity.editorcoroutines": "1.0.0",
         "com.unity.performance.profile-analyzer": "1.2.2",
         "com.unity.test-framework": "1.1.33",
-        "com.unity.testtools.codecoverage": "1.2.4"
+        "com.unity.testtools.codecoverage": "1.2.5"
       }
     },
     "com.unity.ide.rider": {
-      "version": "3.0.26",
+      "version": "3.0.28",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -227,16 +173,9 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.mathematics": {
-      "version": "1.2.6",
-      "depth": 2,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
     "com.unity.nuget.newtonsoft-json": {
       "version": "3.2.1",
-      "depth": 1,
+      "depth": 2,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -267,7 +206,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.testtools.codecoverage": {
-      "version": "1.2.4",
+      "version": "1.2.5",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -307,7 +246,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.9.1",
+      "version": "1.9.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -318,7 +257,7 @@
     },
     "com.unity.xr.legacyinputhelpers": {
       "version": "2.1.10",
-      "depth": 2,
+      "depth": 3,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.vr": "1.0.0",
@@ -328,7 +267,7 @@
     },
     "com.unity.xr.management": {
       "version": "4.4.0",
-      "depth": 1,
+      "depth": 2,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.subsystems": "1.0.0",
