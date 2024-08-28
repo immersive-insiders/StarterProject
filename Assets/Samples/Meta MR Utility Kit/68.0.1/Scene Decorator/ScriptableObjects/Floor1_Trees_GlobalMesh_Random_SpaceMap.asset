@@ -1,0 +1,190 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7621775890710267462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c0d16090e5c40c1a2fe63fb94575337, type: 3}
+  m_Name: SpaceMapGPUMask
+  m_EditorClassIdentifier: 
+--- !u!114 &-7272130310946685552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20dce7571edc13b4a8ecc0eaa7976895, type: 3}
+  m_Name: RotationModifierSpaceMap
+  m_EditorClassIdentifier: 
+  enabled: 1
+  RotateToColor: {r: 0, g: 0, b: 0, a: 1}
+  Radius: 0.02
+--- !u!114 &-1760947955195356297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d196104766fa4d04a4983296d494ce5d, type: 3}
+  m_Name: NotInsideMask
+  m_EditorClassIdentifier: 
+  Labels: 8
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efacc41b4d21cfa458fd5af8b13d5803, type: 3}
+  m_Name: Floor1_Trees_GlobalMesh_Random_SpaceMap
+  m_EditorClassIdentifier: 
+  Poolsize: 50
+  decorationPrefabs:
+  - {fileID: 2096495889278594861, guid: 300c3d6ea4f3ca840b79b8a2d0ad3400, type: 3}
+  - {fileID: 5397548998956914037, guid: 007ee0251bfe09a45bc8e9ed09fa270c, type: 3}
+  - {fileID: 7324994890478250422, guid: 59b9b707dce96c8499d1f7d3f22f78e4, type: 3}
+  - {fileID: 6799459537376695888, guid: 470a9fd690e83014b9d5c22a9fcefba2, type: 3}
+  executeSceneLabels: 1
+  targets: 4
+  targetPhysicsLayers:
+    serializedVersion: 2
+    m_Bits: 63
+  placement: 0
+  placementDirection: {x: 0, y: 0, z: -1}
+  selectBehind: 0
+  rayOffset: {x: 0, y: 0, z: 0.1}
+  spawnHierarchy: 2
+  distributionType: 3
+  gridDistribution:
+    spacingX: 1
+    spacingY: 1
+  simplexDistribution:
+    pointSamplingConfig:
+      pointsPerUnitX: 0
+      pointsPerUnitY: 0
+      noiseOffsetRadius: 0
+  staggeredConcentricDistribution:
+    stepSize: 0
+  randomDistribution:
+    numPerUnit: 50
+  masks:
+  - {fileID: 6077368143198992409}
+  - {fileID: 4295945798623667204}
+  - {fileID: -1760947955195356297}
+  - {fileID: 6619524685898708465}
+  - {fileID: -7621775890710267462}
+  constraints:
+  - name: InsideCurrentRoom
+    enabled: 1
+    mask: {fileID: 4295945798623667204}
+    modeCheck: 1
+    min: 0
+    max: 0
+  - name: NotInsideDesk
+    enabled: 1
+    mask: {fileID: -1760947955195356297}
+    modeCheck: 1
+    min: 0
+    max: 0
+  - name: SpaceMapGPUConstraint
+    enabled: 1
+    mask: {fileID: -7621775890710267462}
+    modeCheck: 0
+    min: 0.2
+    max: 0.8
+  - name: ColliderConstraint
+    enabled: 1
+    mask: {fileID: 6619524685898708465}
+    modeCheck: 1
+    min: 0.2
+    max: 0.8
+  modifiers:
+  - {fileID: -7272130310946685552}
+  - {fileID: 9113171534021985920}
+  discardParentScaling: 1
+  lifetime: 0
+  DrawDebugRaysAndImpactPoints: 0
+--- !u!114 &4295945798623667204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad069f85873d4f04a8e07429e613ecc3, type: 3}
+  m_Name: InsideCurrentRoomMask
+  m_EditorClassIdentifier: 
+--- !u!114 &6077368143198992409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a244f32361274974b989fb470b6d50d2, type: 3}
+  m_Name: RandomMask
+  m_EditorClassIdentifier: 
+--- !u!114 &6619524685898708465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd435dc399be4bfa8879bb8d88967af0, type: 3}
+  m_Name: ColliderMask
+  m_EditorClassIdentifier: 
+  MaxCheckColliders: 10
+  IgnoreFloorCollision: 1
+  IgnoreGlobalMeshCollision: 1
+--- !u!114 &9113171534021985920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cb460de1610eb6479b3a63a1af14a0e, type: 3}
+  m_Name: ScaleModifier
+  m_EditorClassIdentifier: 
+  enabled: 1
+  x:
+    mask: {fileID: 6077368143198992409}
+    limitMin: 1
+    limitMax: 3
+    scale: 2
+    offset: 0
+  y:
+    mask: {fileID: 6077368143198992409}
+    limitMin: 1
+    limitMax: 3
+    scale: 2
+    offset: 0
+  z:
+    mask: {fileID: 6077368143198992409}
+    limitMin: 1
+    limitMax: 3
+    scale: 2
+    offset: 0

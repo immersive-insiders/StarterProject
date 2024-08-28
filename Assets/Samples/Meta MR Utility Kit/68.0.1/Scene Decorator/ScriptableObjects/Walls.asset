@@ -1,0 +1,169 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8444753156378920359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d196104766fa4d04a4983296d494ce5d, type: 3}
+  m_Name: NotInsideMask
+  m_EditorClassIdentifier: 
+  Labels: 16376
+--- !u!114 &-5669891657858190439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a244f32361274974b989fb470b6d50d2, type: 3}
+  m_Name: RandomMask
+  m_EditorClassIdentifier: 
+--- !u!114 &-5433166649591026147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e6dfcc39f0b644ca4475c92a8ebc31, type: 3}
+  m_Name: RotationModifier
+  m_EditorClassIdentifier: 
+  enabled: 1
+  mask: {fileID: -5669891657858190439}
+  limitMin: -Infinity
+  limitMax: Infinity
+  scale: 360
+  offset: 0
+  rotationAxis: {x: 0, y: 1, z: 1}
+  localSpace: 0
+--- !u!114 &-5148012055708290853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31688e38539e3ec41b33c3338c2b2203, type: 3}
+  m_Name: ScaleUniformModifier
+  m_EditorClassIdentifier: 
+  enabled: 1
+  mask: {fileID: -5669891657858190439}
+  limitMin: 0.2
+  limitMax: 2
+  scale: 1
+  offset: 0
+--- !u!114 &-3330882833841761570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ca82de4c0245b24fb0fa71a8a588cea, type: 3}
+  m_Name: KeepUprightWithSurfaceModifier
+  m_EditorClassIdentifier: 
+  enabled: 1
+  uprightAxis: {x: 0, y: 1, z: 0}
+--- !u!114 &-1031649935997186918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7820776d2dedf42ba036ce519acb73, type: 3}
+  m_Name: ConstantMask
+  m_EditorClassIdentifier: 
+  constant: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efacc41b4d21cfa458fd5af8b13d5803, type: 3}
+  m_Name: Walls
+  m_EditorClassIdentifier: 
+  Poolsize: 200
+  decorationPrefabs:
+  - {fileID: 7918606758535151734, guid: f2066a5d1080a1f43afca7438ab8a0aa, type: 3}
+  executeSceneLabels: 4
+  targets: 4
+  targetPhysicsLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  placement: 0
+  placementDirection: {x: 0, y: 0, z: -1}
+  selectBehind: 0
+  rayOffset: {x: 0, y: 0, z: 0.2}
+  spawnHierarchy: 3
+  distributionType: 3
+  gridDistribution:
+    spacingX: 1
+    spacingY: 1
+  simplexDistribution:
+    pointSamplingConfig:
+      pointsPerUnitX: 0
+      pointsPerUnitY: 0
+      noiseOffsetRadius: 0
+  staggeredConcentricDistribution:
+    stepSize: 0
+  randomDistribution:
+    numPerUnit: 5
+  masks:
+  - {fileID: -5669891657858190439}
+  - {fileID: -8444753156378920359}
+  - {fileID: -1031649935997186918}
+  constraints:
+  - name: not in volume
+    enabled: 1
+    mask: {fileID: -8444753156378920359}
+    modeCheck: 1
+    min: 0
+    max: 0
+  modifiers:
+  - {fileID: -3330882833841761570}
+  - {fileID: -5148012055708290853}
+  - {fileID: 6289047711320701761}
+  - {fileID: -5433166649591026147}
+  discardParentScaling: 0
+  lifetime: 0
+  DrawDebugRaysAndImpactPoints: 0
+--- !u!114 &6289047711320701761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e6dfcc39f0b644ca4475c92a8ebc31, type: 3}
+  m_Name: RotationModifier
+  m_EditorClassIdentifier: 
+  enabled: 1
+  mask: {fileID: -5669891657858190439}
+  limitMin: 0
+  limitMax: 1
+  scale: 360
+  offset: 0
+  rotationAxis: {x: 1, y: 0, z: 0}
+  localSpace: 0

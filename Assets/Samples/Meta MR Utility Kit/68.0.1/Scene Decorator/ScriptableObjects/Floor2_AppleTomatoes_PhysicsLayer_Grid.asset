@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efacc41b4d21cfa458fd5af8b13d5803, type: 3}
+  m_Name: Floor2_AppleTomatoes_PhysicsLayer_Grid
+  m_EditorClassIdentifier: 
+  Poolsize: 50
+  decorationPrefabs:
+  - {fileID: 1462392319821319729, guid: 5e5b9f72c0137cf4c90cd72703399458, type: 3}
+  - {fileID: 236323584943456156, guid: 1fe472563311ae640949c741b95d3300, type: 3}
+  executeSceneLabels: 1
+  targets: 5
+  targetPhysicsLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  placement: 0
+  placementDirection: {x: 0, y: 0, z: 1}
+  selectBehind: 1
+  rayOffset: {x: 0, y: 0, z: 1}
+  spawnHierarchy: 3
+  distributionType: 0
+  gridDistribution:
+    spacingX: 0.5
+    spacingY: 0.5
+  simplexDistribution:
+    pointSamplingConfig:
+      pointsPerUnitX: 0
+      pointsPerUnitY: 0
+      noiseOffsetRadius: 0
+  staggeredConcentricDistribution:
+    stepSize: 0
+  randomDistribution:
+    numPerUnit: 10
+  masks: []
+  constraints: []
+  modifiers: []
+  discardParentScaling: 1
+  lifetime: 0
+  DrawDebugRaysAndImpactPoints: 0
